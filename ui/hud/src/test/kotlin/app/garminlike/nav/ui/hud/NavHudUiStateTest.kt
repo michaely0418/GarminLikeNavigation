@@ -4,6 +4,7 @@ import app.garminlike.nav.core.model.NavigationPhase
 import app.garminlike.nav.core.model.VehicleType
 import app.garminlike.nav.ui.hud.model.DemoModeSelection
 import app.garminlike.nav.ui.hud.model.GpsStatus
+import app.garminlike.nav.ui.hud.model.HudFormatters
 import app.garminlike.nav.ui.hud.model.NavHudUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,6 +27,7 @@ class NavHudUiStateTest {
 
         // H1 check: GPS must be UNKNOWN in unrouted state (never falsely claim VALID)
         assertEquals(GpsStatus.UNKNOWN, state.gpsStatus)
+        assertEquals("GPS: 未連接 (展示)", HudFormatters.formatHudGpsLabel(state.gpsStatus, state.isDemoMode))
 
         // Verifies no fabricated telemetry in idle/unrouted state
         assertEquals(0, state.currentSpeedKmh)
@@ -50,6 +52,8 @@ class NavHudUiStateTest {
         assertTrue(state.isGuiding)
         assertFalse(state.isUnrouted)
         assertEquals(GpsStatus.VALID, state.gpsStatus)
+        // R2-H1 assertion: Demo simulation maps to "GPS: 模擬", never "GPS: 良好"
+        assertEquals("GPS: 模擬", HudFormatters.formatHudGpsLabel(state.gpsStatus, state.isDemoMode))
 
         assertEquals(58, state.currentSpeedKmh)
         assertEquals(60, state.speedLimitKmh)

@@ -3,6 +3,8 @@ package app.garminlike.nav.ui.hud
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -129,7 +131,8 @@ fun LandscapeHudLayout(
             Column(
                 modifier = Modifier
                     .weight(0.32f)
-                    .fillMaxHeight(),
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 ManeuverGuidanceHeader(
@@ -321,12 +324,14 @@ fun PortraitHudLayout(
 @Composable
 private fun TopStatusBar(state: NavHudUiState) {
     val vehicleBadge = HudFormatters.formatVehicleTag(state.vehicleType)
-    val gpsStatusLabel = HudFormatters.formatGpsStatusLabel(state.gpsStatus)
-    val gpsColor = when (state.gpsStatus) {
-        GpsStatus.UNKNOWN -> HudColors.TextMuted
-        GpsStatus.SEARCHING -> HudColors.VividAmber
-        GpsStatus.VALID -> HudColors.EmeraldGreen
-        GpsStatus.LOST -> HudColors.CrimsonRed
+    val gpsStatusLabel = HudFormatters.formatHudGpsLabel(state.gpsStatus, state.isDemoMode)
+    val gpsColor = when {
+        state.isDemoMode && state.gpsStatus == GpsStatus.VALID -> HudColors.AzureBlue
+        state.isDemoMode -> HudColors.TextMuted
+        state.gpsStatus == GpsStatus.VALID -> HudColors.EmeraldGreen
+        state.gpsStatus == GpsStatus.SEARCHING -> HudColors.VividAmber
+        state.gpsStatus == GpsStatus.LOST -> HudColors.CrimsonRed
+        else -> HudColors.TextMuted
     }
 
     Row(

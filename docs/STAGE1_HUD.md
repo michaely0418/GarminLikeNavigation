@@ -1,8 +1,8 @@
 # Stage 1 — Mobile Compose HUD Prototype (`:ui:hud`)
 
-**Document Version:** 1.1.0  
+**Document Version:** 1.2.0  
 **Effective Date:** 2026-10-14  
-**Revision Date:** 2026-10-14 (Addressing ChatGPT PR #8 Round 1 Review H1–H5)  
+**Revision Date:** 2026-10-14 (Addressing ChatGPT PR #8 Round 2 Review R2-H1 & R2-H3)  
 **Primary Owner:** Gemini (Stage 1 HUD Owner)  
 **Reviewer:** ChatGPT (Cross-AI Reviewer)  
 **Branch:** `feature/stage1-hud`  
@@ -24,8 +24,9 @@ This deliverable implements the mobile Garmin-like Head-Up Display (HUD) prototy
 
 ---
 
-## 2. Review H1–H5 Resolutions & Verification Lifecycle
+## 2. Review Resolutions & Verification Lifecycle
 
+### 2.1 Round 1 Review (H1–H5):
 | Item | Severity | ChatGPT Review Finding | Gemini Resolution | Status / Evidence |
 |---|---|---|---|---|
 | **H1** | **HIGH** | `TopStatusBar` 預設以 `!isGpsLost` 顯示 `GPS: 良好`，會虛報定位狀態。 | 導入四態列舉 `GpsStatus` (`UNKNOWN`, `SEARCHING`, `VALID`, `LOST`)；`demoInitial` 預設為 `UNKNOWN`（顯示「GPS: 未連接」）；僅在獲取有效 Fix 時始顯示「良好」。 | **RESOLVED**<br>`NavHudUiState.kt`, `HudFormatters.kt`, `HudFormattersTest.kt` |
@@ -33,6 +34,12 @@ This deliverable implements the mobile Garmin-like Head-Up Display (HUD) prototy
 | **H3** | **HIGH** | Portrait 底部 `SpeedometerTelemetryCard` 與 `TripSummaryBar` 置於同一 Row，在 390dp/320dp 螢幕或大字體下會產生橫向裁切；`DemoModeButton` 高度不足。 | 1. 重構 Portrait 底部：改為雙欄 `[數位儀表] + [直向旅程卡]`，下方配置全寬 `PortraitActionBar`。<br>2. `DemoModeButton` 與底欄按鍵全面保證 $\ge 48\text{dp}$ 駕駛觸控高度。<br>3. 支援 320dp 窄螢幕與 `fontScale >= 1.3`。 | **RESOLVED**<br>`HudScreen.kt`, `TripSummaryBar.kt`, `DemoNoRouteBanner.kt` |
 | **H4** | **MEDIUM** | `DemoNoRouteBanner` 的車種按鈕 active 狀態判定錯誤（機車／重機永遠 false，汽車永遠 true）。 | 引入 `DemoModeSelection` 列舉與 `demoSelection` 衍生狀態；無路線時高亮「無路線」，模擬引導時依據 `vehicleType` 精確高亮汽車、機車或重機。 | **RESOLVED**<br>`DemoNoRouteBanner.kt`, `NavHudUiStateTest.kt` |
 | **H5** | **INTEGRATION** | 與 PR #7 共用檔案變更（`libs.versions.toml`, `android-ci.yml`）需整合驗證；APK 需有整合入口。 | 1. 訂定 PR #7 與 PR #8 合併 recipe，整合後 CI 需同時執行 `:core:model:test :core:navigation:test :ui:hud:test :app:assembleDebug`。<br>2. 本 PR 保持分離邊界，待 Stage 1 驗收階段再由協調 PR 串接 Activity。 | **DOCUMENTED**<br>`docs/STAGE1_HUD.md`, `.ai/CURRENT_TASK.md` |
+
+### 2.2 Round 2 Review (R2-H1, R2-H3):
+| Item | Severity | ChatGPT Review Finding | Gemini Resolution | Status / Evidence |
+|---|---|---|---|---|
+| **R2-H1** | **MEDIUM** | Demo 模式即使 `GpsStatus.VALID` 也不能顯示「GPS: 良好」，應誠實標記「GPS: 模擬」並使用中性藍色，避免駕駛誤判為真實定位。 | 1. 擴充純函式 `formatHudGpsLabel(status, isDemoMode)`：在 `isDemoMode = true` 且 `VALID` 時回傳 `"GPS: 模擬"`，色彩映射為 `HudColors.AzureBlue`。<br>2. 僅在 `!isDemoMode` 且 `VALID` 時顯示「GPS: 良好」（翡翠綠）。<br>3. 新增完整單元測試覆蓋 Demo 狀態下的文字與顏色映射。 | **RESOLVED**<br>`HudFormatters.kt`, `HudScreen.kt`, `HudFormattersTest.kt` |
+| **R2-H3** | **MEDIUM** | Portrait 旅程卡在極端 320dp 寬度與 `fontScale >= 1.3` 下，剩餘里程與抵達時間並排仍有換行擠壓風險；且需嚴謹標註實機驗證狀態。 | 1. `PortraitTripStatsCard` 重構為垂直單欄堆疊（剩餘里程、預計抵達、行車時間各占獨立一行），獲得完整卡片寬度，徹底根絕橫向排版擠壓。<br>2. 橫向左側欄追加 `verticalScroll` 防禦小高度螢幕。<br>3. 實機 Compose UI 渲染標記為 **`NOT RUN`**（待後續真機 QA 執行），不虛報驗證結果。 | **RESOLVED**<br>`TripSummaryBar.kt`, `HudScreen.kt` |
 
 ---
 
@@ -82,11 +89,11 @@ This deliverable implements the mobile Garmin-like Head-Up Display (HUD) prototy
 
 ## 5. Verification & Testing
 
-- **JVM Unit Tests (`ui/hud/src/test/kotlin/` — 17 `@Test` methods total):**
-  - `HudFormattersTest.kt` (10 tests): Speed conversions (mps to km/h, null/NaN handling), distance rounding (<1000m and >=1000m), duration formatting, vehicle badges, overspeed logic, and `formatGpsStatusLabel` (H1).
+- **JVM Unit Tests (`ui/hud/src/test/kotlin/` — 18 `@Test` methods total, 100% PASS):**
+  - `HudFormattersTest.kt` (11 tests): Speed conversions (mps to km/h, null/NaN handling), distance rounding (<1000m and >=1000m), duration formatting, vehicle badges, overspeed logic, and `formatHudGpsLabel` covering both demo mode (`GPS: 模擬`) and live GPS (`GPS: 良好`) states (H1, R2-H1).
   - `NavHudUiStateTest.kt` (5 tests): Validates default state is strictly unrouted (`isUnrouted = true`, `gpsStatus = UNKNOWN`, `speedLimitKmh = null`, `currentSpeedKmh = 0`), validates Car/Scooter/Heavy Motorcycle demo fixtures with mock alerts (H2), validates `demoSelection` (H4).
   - `HudVehicleModeTest.kt` (2 tests): Exhaustive enum coverage and state immutability when toggling vehicle types.
-- **Compose Previews (9 total):**
+- **Compose Previews (9 total, Compilation verified):**
   - `HudLandscapeCarPreview`
   - `HudLandscapeScooterPreview`
   - `HudLandscapeHeavyMotorcyclePreview`
@@ -96,3 +103,6 @@ This deliverable implements the mobile Garmin-like Head-Up Display (HUD) prototy
   - `HudNoRoutePreview` (390x840)
   - `HudPortraitNarrow320Preview` (320x640 narrow test)
   - `HudPortraitLargeFontPreview` (390x840 with `fontScale = 1.3f`)
+- **Device UI Execution Status:**
+  - **`NOT RUN` (Physical Device UI Rendering):** Following cross-review alignment, on-device UI rendering is classified as `NOT RUN` pending physical device QA / instrumented UI testing by Product Owner / Test Team on hardware. Only JVM headless unit tests and Compose preview compilation have been verified in this PR.
+

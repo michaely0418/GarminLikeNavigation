@@ -91,4 +91,19 @@ class HudFormattersTest {
         assertEquals("GPS: 良好", HudFormatters.formatGpsStatusLabel(app.garminlike.nav.ui.hud.model.GpsStatus.VALID))
         assertEquals("GPS: 訊號中斷", HudFormatters.formatGpsStatusLabel(app.garminlike.nav.ui.hud.model.GpsStatus.LOST))
     }
+
+    @Test
+    fun `formatHudGpsLabel distinguishes demo simulation from production GPS fix`() {
+        // R2-H1 test: Demo simulation must never claim production "GPS: 良好"
+        assertEquals("GPS: 模擬", HudFormatters.formatHudGpsLabel(app.garminlike.nav.ui.hud.model.GpsStatus.VALID, isDemoMode = true))
+        assertEquals("GPS: 未連接 (展示)", HudFormatters.formatHudGpsLabel(app.garminlike.nav.ui.hud.model.GpsStatus.UNKNOWN, isDemoMode = true))
+        assertEquals("GPS: 搜尋中 (展示)", HudFormatters.formatHudGpsLabel(app.garminlike.nav.ui.hud.model.GpsStatus.SEARCHING, isDemoMode = true))
+        assertEquals("GPS: 訊號中斷 (展示)", HudFormatters.formatHudGpsLabel(app.garminlike.nav.ui.hud.model.GpsStatus.LOST, isDemoMode = true))
+
+        // Production mode (isDemoMode = false) displays verified fix
+        assertEquals("GPS: 良好", HudFormatters.formatHudGpsLabel(app.garminlike.nav.ui.hud.model.GpsStatus.VALID, isDemoMode = false))
+        assertEquals("GPS: 搜尋中...", HudFormatters.formatHudGpsLabel(app.garminlike.nav.ui.hud.model.GpsStatus.SEARCHING, isDemoMode = false))
+        assertEquals("GPS: 未連接", HudFormatters.formatHudGpsLabel(app.garminlike.nav.ui.hud.model.GpsStatus.UNKNOWN, isDemoMode = false))
+        assertEquals("GPS: 訊號中斷", HudFormatters.formatHudGpsLabel(app.garminlike.nav.ui.hud.model.GpsStatus.LOST, isDemoMode = false))
+    }
 }

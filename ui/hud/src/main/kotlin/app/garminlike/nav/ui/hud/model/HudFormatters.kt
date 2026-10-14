@@ -82,13 +82,24 @@ object HudFormatters {
     }
 
     /**
-     * Localized status label for GPS tracking state.
-     * Spec reference: Review H1 requirement.
+     * Localized status label for GPS tracking state with explicit demo mode awareness.
+     * Prevents false claims of "GPS: 良好" during simulation and unverified states.
+     *
+     * Spec reference: Review R2-H1 requirement.
      */
-    fun formatGpsStatusLabel(status: GpsStatus): String = when (status) {
-        GpsStatus.UNKNOWN -> "GPS: 未連接"
-        GpsStatus.SEARCHING -> "GPS: 搜尋中..."
-        GpsStatus.VALID -> "GPS: 良好"
-        GpsStatus.LOST -> "GPS: 訊號中斷"
+    fun formatHudGpsLabel(status: GpsStatus, isDemoMode: Boolean): String = when {
+        isDemoMode && status == GpsStatus.VALID -> "GPS: 模擬"
+        isDemoMode && status == GpsStatus.UNKNOWN -> "GPS: 未連接 (展示)"
+        isDemoMode && status == GpsStatus.SEARCHING -> "GPS: 搜尋中 (展示)"
+        isDemoMode && status == GpsStatus.LOST -> "GPS: 訊號中斷 (展示)"
+        status == GpsStatus.VALID -> "GPS: 良好"
+        status == GpsStatus.SEARCHING -> "GPS: 搜尋中..."
+        status == GpsStatus.LOST -> "GPS: 訊號中斷"
+        else -> "GPS: 未連接"
     }
+
+    /**
+     * Localized status label for production GPS tracking state.
+     */
+    fun formatGpsStatusLabel(status: GpsStatus): String = formatHudGpsLabel(status, isDemoMode = false)
 }
