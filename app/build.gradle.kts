@@ -10,8 +10,8 @@ android {
         minSdk = 26
         applicationId = "app.garminlike.nav"
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.0.1-stage0"
+        versionCode = 2
+        versionName = "0.1.0-stage1"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
