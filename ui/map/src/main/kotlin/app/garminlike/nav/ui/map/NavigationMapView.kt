@@ -48,10 +48,18 @@ class NavigationMapView(context: Context) : FrameLayout(context) {
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { readyMap ->
             map = readyMap
+            // A valid network/GPS fix may arrive before asynchronous MapLibre
+            // initialization finishes, particularly during screen rotation.
+            // Never replace it with the hard-coded Taipei preview camera.
+            val fix = currentLocation
             readyMap.cameraPosition = CameraPosition.Builder()
-                .target(TAIPEI)
-                .zoom(10.5)
+                .target(
+                    if (fix == null) TAIPEI
+                    else LatLng(fix.latitudeDeg, fix.longitudeDeg)
+                )
+                .zoom(if (fix == null) 10.5 else 16.0)
                 .build()
+            if (fix != null) centeredOnFirstFix = true
             applyStyle()
         }
     }
@@ -75,8 +83,9 @@ class NavigationMapView(context: Context) : FrameLayout(context) {
         currentLocation = point
         showLocationMarker()
         if (!centeredOnFirstFix) {
-            centeredOnFirstFix = true
-            centerOnCurrentLocation()
+            // Keep first-fix recenter pending until MapLibre is actually ready.
+            // Previously this flag flipped when map==null and recenter was lost.
+            centeredOnFirstFix = centerOnCurrentLocation()
         }
     }
 
