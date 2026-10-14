@@ -1,4 +1,4 @@
-name: Android Stage0 build
+name: Android CI
 on:
   push:
     branches: [main, develop]
@@ -38,6 +38,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: stage0-debug-apk
+          name: navigation-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
