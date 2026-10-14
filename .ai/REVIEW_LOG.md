@@ -28,6 +28,7 @@ Gemini has conducted an independent engineering review of the Stage 0 codebase, 
 | **ISSUE-04** | `.github/workflows/android-ci.yml` | **LOW** | Line 31 executes `python3 scripts/validate_benchmarks.py --allow-draft`. Now that Gemini has provided 16 fully verified cases, `--allow-draft` should eventually be removed to ensure regressions (<15 cases) fail CI. | Keep `--allow-draft` for initial bootstrap PR; remove `--allow-draft` in follow-up CI tightening once PR is merged. | **SCHEDULED FOR STAGE 1**<br>`android-ci.yml#L31` |
 | **ISSUE-05** | `core:interfaces` / `ISearchProvider.kt` | **LOW** | `search(request: SearchRequest)` returns `List<PlaceCandidate>` without pagination / cursor metadata. Large result sets or incremental autocomplete scrolls cannot be paginated. | Sufficient for Stage 0/Stage 1. When implementing live search in Stage 4, consider introducing `SearchResult(candidates: List<PlaceCandidate>, nextPageToken: String?)`. | **DEFERRED TO STAGE 4**<br>`ISearchProvider.kt#L8` |
 | **ISSUE-06** | `settings.gradle.kts` / Toolchain | **MEDIUM** | Missing Java 17 toolchain auto-provisioning when running on Windows with higher JDK (e.g. JDK 21). | HOTFIX-003 added `org.gradle.toolchains.foojay-resolver-convention` version 1.0.0, resolving toolchain auto-download. | **RESOLVED**<br>`settings.gradle.kts#L18-L20` |
+| **ISSUE-07** | `.github/workflows/android-ci.yml` | **HIGH** | Live GitHub Actions CI execution failed on PR #3 at step `android-actions/setup-android@v3` with `Warning: Failed to find package 'tools'`. The legacy `tools` package has been deprecated/removed in recent Android SDK releases. | Replace or configure `setup-android` with explicit packages or rely on pre-installed Android SDK on `ubuntu-latest`. Also verify `libs.versions.toml` AGP version `8.13.2`. | **OPEN / ACTION REQUIRED BY CHATGPT IN STAGE 0 ACCEPTANCE**<br>Run #38542298760 |
 
 ---
 
@@ -50,8 +51,8 @@ Gemini has conducted an independent engineering review of the Stage 0 codebase, 
 | **Benchmark Schema Validation** | `python scripts/validate_benchmarks.py` | **PASS** | Output: `JSON schema valid, 16 cases` (Validated without `--allow-draft`). |
 | **PowerShell Bootstrap Path Check** | Python binary string inspection on `gradlew.bat` | **PASS** | Confirmed clean string `scripts\bootstrap-gradle-wrapper.ps1` on line 6. |
 | **JVM Model Compilation** | N/A (Inspected from prior compile) | **PASS** | `core/model/build/libs/model.jar` and `core/interfaces/build/libs/interfaces.jar` generated. |
-| **Android Studio assembleDebug** | `gradlew.bat :core:model:test :app:assembleDebug` | **NOT RUN** | Authoring environment lacks Android SDK platforms / build-tools; delegated to GitHub Actions CI upon PR creation. |
-| **Gradle Wrapper JAR Bootstrap** | `powershell -ExecutionPolicy Bypass -File scripts\bootstrap-gradle-wrapper.ps1` | **NOT RUN** | Pending developer execution on network-connected machine. |
+| **Gradle Wrapper JAR Bootstrap** | `powershell -ExecutionPolicy Bypass -File scripts\bootstrap-gradle-wrapper.ps1` | **PASS (Pre-existing)** | Verified SHA-256 matches `81A82AAEA5ABCC8FF68B3DFCB58B3C3C429378EFD98E7433460610FECD7AE45F`. |
+| **GitHub Actions CI (Remote)** | Workflow `android-ci.yml` on PR #3 | **FAIL (Infrastructure)** | Failed at `android-actions/setup-android@v3` (`Warning: Failed to find package 'tools'`). See ISSUE-07. |
 
 ---
 
