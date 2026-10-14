@@ -96,11 +96,13 @@ class MainActivity : Activity() {
         mapWidget = NavigationMapView(this)
         mapWidget.setNightMode(nightMode)
 
+        val isLandscape = resources.configuration.orientation ==
+            android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
         val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
+            orientation = if (isLandscape) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
             setBackgroundColor(Color.rgb(20, 27, 37))
-            // Android 15 with targetSdk 35 enforces edge-to-edge by default.
-            // Keep the title and map controls outside status/navigation bars.
+            // Android 15+ edge-to-edge; apply safe insets to BOTH arrangements.
             setOnApplyWindowInsetsListener { view, insets ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     val safe = insets.getInsets(
@@ -117,36 +119,72 @@ class MainActivity : Activity() {
                 insets
             }
         }
-        root.addView(label("Garmin-like Navigation   •   Stage 1", 19f).apply {
-            setPadding(dp(16), dp(10), dp(8), dp(2))
-        })
-        root.addView(label("地圖與定位預覽｜尚無導航及測速功能", 12f).apply {
-            setTextColor(Color.rgb(239, 195, 123))
-            setPadding(dp(16), 0, 0, dp(8))
-        })
-        root.addView(vehicleSelector())
-        root.addView(actionButton("HUD 展示（模擬資料）") {
-            startActivity(Intent(this@MainActivity, HudPreviewActivity::class.java))
-        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)).apply {
-            setMargins(dp(10), 0, dp(10), dp(6))
-        })
-        root.addView(mapWidget, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
-        ))
-        root.addView(mapActions())
+
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(label("Garmin-like Navigation   •   Stage 1", 19f).apply {
+                setPadding(dp(16), dp(10), dp(8), dp(2))
+            })
+            addView(label("地圖與定位預覽｜尚無導航及測速功能", 12f).apply {
+                setTextColor(Color.rgb(239, 195, 123))
+                setPadding(dp(16), 0, 0, dp(8))
+            })
+            addView(vehicleSelector())
+            addView(actionButton("HUD 展示（模擬資料）") {
+                startActivity(Intent(this@MainActivity, HudPreviewActivity::class.java))
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)).apply {
+                setMargins(dp(10), 0, dp(10), dp(6))
+            })
+        }
+
+        val footer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(mapActions())
+        }
         gpsStatus = label("等待定位權限", 13f).apply {
             setPadding(dp(14), dp(6), dp(14), dp(6))
         }
-        root.addView(gpsStatus)
+        footer.addView(gpsStatus)
         connectivityStatus = label("正在檢查網路狀態", 12f).apply {
             setTextColor(Color.rgb(219, 210, 175))
             setPadding(dp(14), 0, dp(14), dp(4))
         }
-        root.addView(connectivityStatus)
-        root.addView(label("圖資：OpenFreeMap / OpenStreetMap • 需網路 • 僅供測試", 11f).apply {
+        footer.addView(connectivityStatus)
+        footer.addView(label("圖資：OpenFreeMap / OpenStreetMap • 需網路 • 僅供測試", 11f).apply {
             setTextColor(Color.LTGRAY)
             setPadding(dp(14), 0, dp(14), dp(9))
         })
+
+        if (isLandscape) {
+            // Landscape is map-first: fixed-width, SCROLLABLE controls on the right.
+            // A vertical toolbar above the map used to leave only a 20–40dp map strip.
+            root.addView(mapWidget, LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f
+            ))
+            val controls = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                addView(header)
+                addView(footer)
+            }
+            val scrollPanel = android.widget.ScrollView(this).apply {
+                isFillViewport = false
+                addView(controls)
+                setBackgroundColor(Color.rgb(20, 27, 37))
+            }
+            // Support split screen / small landscape devices without wasting map width.
+            val panelWidthDp = (resources.configuration.screenWidthDp * 0.40f)
+                .toInt().coerceIn(260, 360)
+            root.addView(scrollPanel, LinearLayout.LayoutParams(
+                dp(panelWidthDp), ViewGroup.LayoutParams.MATCH_PARENT
+            ))
+        } else {
+            // Portrait: toolbar at top, map grows to remaining height.
+            root.addView(header)
+            root.addView(mapWidget, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
+            ))
+            root.addView(footer)
+        }
         setContentView(root)
         mapWidget.onCreate(savedInstanceState)
         updateVehicleButtons()
