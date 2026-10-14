@@ -19,4 +19,6 @@ kotlin { jvmToolchain(17) }
 
 dependencies {
     implementation(project(":core:interfaces"))
+    implementation(project(":core:model"))
+    implementation(libs.maplibre.sdk)
 }
