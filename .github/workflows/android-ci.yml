@@ -33,11 +33,39 @@ jobs:
         run: |
           python3 -m pip install --user "jsonschema>=4.18,<5"
           python3 scripts/validate_benchmarks.py
+      - name: Prepare stable CI test APK signing (optional until secrets configured)
+        id: signing
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.NAV_TEST_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.NAV_TEST_KEYSTORE_PASSWORD }}
+        run: |
+          if [[ -z "$KEYSTORE_B64" || -z "$KEYSTORE_PASSWORD" ]]; then
+            echo '::warning::Stable test signing is NOT configured. Uploaded APK is signed with an ephemeral GitHub Runner debug key and CANNOT reliably update earlier artifacts.'
+            echo 'stable=false' >> "$GITHUB_OUTPUT"
+          else
+            printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/nav-ci-debug.p12"
+            chmod 600 "$RUNNER_TEMP/nav-ci-debug.p12"
+            echo "CI_TEST_KEYSTORE_FILE=$RUNNER_TEMP/nav-ci-debug.p12" >> "$GITHUB_ENV"
+            echo "CI_TEST_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+            echo 'stable=true' >> "$GITHUB_OUTPUT"
+          fi
       - name: Kotlin core, navigation and HUD tests plus integrated Android Debug APK
-        run: gradle --no-daemon :core:model:test :core:navigation:test :ui:hud:test :app:assembleDebug
+        shell: bash
+        run: |
+          gradle --no-daemon -PciVersionCode="$((10000 + GITHUB_RUN_NUMBER))" :core:model:test :core:navigation:test :ui:hud:test :app:assembleDebug
+      - name: Report signed APK identity (public certificate only)
+        shell: bash
+        run: |
+          APK='app/build/outputs/apk/debug/app-debug.apk'
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep '^package:'
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK" | grep 'Signer #1 certificate SHA-256 digest:'
+          if [[ '${{ steps.signing.outputs.stable }}' == 'true' ]]; then
+            echo 'Stable TEST certificate in use. Do NOT treat it as a release signing credential.'
+          fi
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: navigation-integration-debug-apk
+          name: ${{ steps.signing.outputs.stable == 'true' && 'navigation-stable-test-apk' || 'navigation-ephemeral-debug-apk' }}
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
