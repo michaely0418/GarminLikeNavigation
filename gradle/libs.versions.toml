@@ -4,11 +4,13 @@ kotlin = "2.2.20"
 coroutines = "1.10.2"
 carApp = "1.7.0"
 junit = "4.13.2"
+maplibre = "12.3.1"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 androidx-car-app = { module = "androidx.car.app:app", version.ref = "carApp" }
 junit = { module = "junit:junit", version.ref = "junit" }
+maplibre-sdk = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibre" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
