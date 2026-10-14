@@ -75,3 +75,25 @@ Release/QA gate for [INSTALL-UPDATE-01](https://github.com/michaely0418/GarminLi
 - [ ] Record the `adb install -r` error code if in-place upgrade still fails.
 
 Step-by-step secure setup: [docs/APK_UPDATE_SIGNING.md](APK_UPDATE_SIGNING.md).
+
+## Gemini PR #10 Cross Review — M1/M2 Fixes (2026-10-14)
+
+Source: [Gemini review comment #6171681601](https://github.com/michaely0418/GarminLikeNavigation/pull/10#issuecomment-6171681601), reviewed at `eba1248`.
+
+### 本次改動項目
+- **M1** (MapLibre rotation): `NavigationMapView.onCreate(savedInstanceState)` now preserves the MapLibre-restored camera when the Activity is recreated, including when a location fix arrives before asynchronous MapLibre initialization. A fresh launch still opens on Taipei or the first available fix. Avoid forcing first post-rotation recenter; the user may be inspecting a different map area.
+- **M2** (GPS callback order): Added the Android-independent `LocationFixPolicy` in `:core:navigation`. Fresh location fixes are ordered by Android `elapsedRealtimeNanos` when present; if a provider lacks it, fall back to `Location.time`. Keep the previous 15m accuracy hysteresis and 15-second freshness window. Out-of-order network fixes must not overwrite newer GPS fixes.
+- **L1**: Replaced the redundant null condition in MainActivity by a nullable metadata conversion, avoiding the always-true compiler warning.
+- **L3**: Reduced Button minimum width and horizontal padding to reduce overlap risks on 320dp narrow screens.
+- **L2** deferred: `ConnectivityManager.NetworkCallback` for foreground network transitions is postponed to later connectivity/offline behavior work; existing initial/onResume connectivity status remains unchanged.
+
+### 本次要測試項目
+- [ ] CI: `:core:model:test :core:navigation:test :ui:hud:test :app:assembleDebug`, strict 18-case JSON Benchmark Schema and signed APK artifact all PASS.
+- [ ] JVM `LocationFixPolicyTest`: 8 new cases covering first fix, delayed older fix, monotonic time precedence, wall-clock fallback, accuracy hysteresis, stale prior fix, unknown accuracy.
+- [ ] Real device: pan/zoom map away from location, rotate portrait→landscape→portrait; camera should not jump to Taipei or automatically reset to a GPS fix.
+- [ ] Real device: new app launch with actual GPS fix remains centered on location. `◎ 定位` still explicitly recenters when the user wants to follow current position.
+- [ ] Real device: GPS and network callbacks interleave without a visibly older marker jumping back; `adb logcat` or controlled location injection required for deterministic out-of-order proof.
+- [ ] Narrow screen 320dp / fontScale 1.3: map action buttons legible and not clipped.
+
+### Verification boundary
+Compilation/JVM tests cannot prove camera persistence across Android Activity recreation or low-width UI rendering on a physical phone. M1 and L3 require device or emulator QA, separate from CI. PR #10 remains Draft pending Gemini focused review and Product Owner acceptance. G1/G2 restrictions remain unchanged.
