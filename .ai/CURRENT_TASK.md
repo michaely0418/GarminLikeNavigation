@@ -1,11 +1,11 @@
 # Current task
 
 - Stage: 0 — repo & six-contract alignment
-- Status: IN PROGRESS / product owner authorized
-- Feature branch: `feature/stage0-bootstrap` (suggested; not created remotely)
-- Issue: `STAGE0-001` — to create on GitHub after remote exists
+- Status: GEMINI FINAL REVISION (R9/R10 RESOLVED) / AWAITING CHATGPT FINAL ACCEPTANCE
+- Feature branch: `feature/stage0-gemini-deliverables`
+- Issue: `STAGE0-001`
 - Owners: ChatGPT scaffold; Gemini policy/legal/HUD/benchmark
-- Files to review first: `docs/ARCHITECTURE.md`, `docs/INTERFACE_CONTRACTS.md`, `docs/STAGE0_CHECKLIST.md`, `GEMINI_HANDOFF.md`
-- Acceptance: successful real Gradle build, tests/CI logs, >=15 documented benchmark drafts, licensed search plan, official legal source mapping, HUD, peer review
+- Files delivered by Gemini: `docs/API_POLICY.md`, `docs/VEHICLE_RULES.md`, `docs/HUD_WIREFRAME.md`, `tests/routing-cases/taiwan_vehicle_benchmarks.json`, `.ai/REVIEW_LOG.md`
+- Acceptance: successful real Gradle build, tests/CI logs, >=15 documented benchmark drafts (18 provided), licensed search plan, official legal source mapping, HUD, peer review
 - Out of scope: feature-complete GPS/map/routing/Android Auto, API key use, production release
 - Forbidden: broad rewrites of shared interfaces or edits to `main` without review; claims of verified GPS/legality/Google licensing without evidence

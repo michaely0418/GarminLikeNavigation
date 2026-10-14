@@ -1,5 +1,930 @@
 {
   "schemaVersion": "1.0",
-  "datasetId": "taiwan-vehicle-draft-2026-10-14",
-  "cases": []
+  "datasetId": "taiwan-vehicle-benchmarks-v1.1-gemini",
+  "cases": [
+    {
+      "caseId": "TW-TC-01",
+      "title": "國道三號甲線 (國3甲) 大型重型機車 (含250cc以上黃牌與紅牌) 合法通行驗證",
+      "description": "驗證 250cc 以上大型重型機車（含 250-549cc 黃牌及 550cc 以上紅牌）行駛國道三號甲線台北聯絡道全線，依法合法開放通行。",
+      "legalReference": [
+        {
+          "authority": "交通部高速公路局",
+          "documentTitle": "交通部高速公路局國道3號甲線大型重型機車行駛管理規定",
+          "url": "https://www.freeway.gov.tw/Publish.aspx?cnid=193&p=358",
+          "publishedAt": "2012-07-01",
+          "effectiveAt": "2012-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "國道3號甲線比照快速公路，開放排氣量逾250c.c.以上大型重型機車（含黃牌與紅牌）行駛",
+          "verificationStatus": "VERIFIED"
+        },
+        {
+          "authority": "內政部警政署國道公路警察局",
+          "documentTitle": "國道公路警察局大型重型機車行駛國道相關規定與FAQ",
+          "url": "https://www.hpb.npa.gov.tw/ch/app/faq/view?id=2606&module=faq&serno=A24717",
+          "publishedAt": "2012-07-01",
+          "effectiveAt": "2012-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "國道3號甲線全線開放排氣量逾250c.c.之大型重型機車行駛",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 25.0195,
+        "lng": 121.554,
+        "name": "國3甲台北端起點 (辛亥路三段/國3甲匝道)"
+      },
+      "destination": {
+        "lat": 25.0005,
+        "lng": 121.611,
+        "name": "國3甲深坑端 (深坑文山路出口)"
+      },
+      "waypoints": [],
+      "vehicleType": "HEAVY_MOTORCYCLE",
+      "vehicleAttributes": {
+        "engineDisplacementCc": 300,
+        "plateColor": "YELLOW",
+        "isHeavyMotorcycle": true
+      },
+      "expectedOutcome": {
+        "mustForbidSegments": [],
+        "mustAllowSegments": [
+          {
+            "segmentRef": "TW-SEG-01",
+            "direction": "EASTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "國3甲全線高架主線 (開放逾250cc黃牌/紅牌，Stage 2 需綁定 OSM Way ID)"
+          }
+        ],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SEG-01",
+            "direction": "EASTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID"
+          }
+        ],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "ALLOWED",
+        "comments": "國道3號甲線（台北聯絡道）法定屬國道快速公路性質，全線開放排氣量逾250c.c.之大型重型機車（黃牌與紅牌皆允許）。本案例配置300cc黃牌屬性進行雙重驗證，防止算路引擎錯誤排除黃牌。"
+      }
+    },
+    {
+      "caseId": "TW-TC-02",
+      "title": "國道三號甲線 (國3甲) 普通機車嚴格禁止通行驗證",
+      "description": "驗證普通機車（白牌）行駛台北至深坑路段時，嚴禁進入國道三號甲線主線與匝道，必須繞行平面道路。",
+      "legalReference": [
+        {
+          "authority": "交通部",
+          "documentTitle": "高速公路及快速公路交通管制規則",
+          "url": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=K0040019&flno=19",
+          "publishedAt": "2006-06-30",
+          "effectiveAt": "2006-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "第19條禁止排氣量未滿250立方公分機車進入高快速公路",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 25.0195,
+        "lng": 121.554,
+        "name": "辛亥路三段"
+      },
+      "destination": {
+        "lat": 25.0005,
+        "lng": 121.611,
+        "name": "深坑老街"
+      },
+      "waypoints": [],
+      "vehicleType": "SCOOTER",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-01",
+            "direction": "EASTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "國3甲主線與各交流道匝道"
+          }
+        ],
+        "mustAllowSegments": [],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SURFACE-106B",
+            "direction": "EASTBOUND",
+            "sourceType": "ROAD_NAME_HINT",
+            "notes": "文山路/木柵路或市道106號平面道路"
+          }
+        ],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "FORBIDDEN",
+        "comments": "普通機車不可進入任何國道路段，包含國3甲。mustTraverseSegments 為人工草案規範，Stage 2 需映射實體 Way ID。"
+      }
+    },
+    {
+      "caseId": "TW-TC-03",
+      "title": "國道一號 (中山高主線) 大型重機嚴禁通行",
+      "description": "驗證大型重機在內湖交流道與南崁交流道之間的路徑規劃，國道一號主線與汐五高架必須完全排除。",
+      "legalReference": [
+        {
+          "authority": "交通部高速公路局",
+          "documentTitle": "大型重型機車行駛高速公路說明與通告",
+          "url": "https://www.freeway.gov.tw/Publish.aspx?cnid=1778",
+          "publishedAt": "2012-07-01",
+          "effectiveAt": "2012-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "高速公路除國道3號甲線外，均尚未公告開放大型重型機車行駛",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 25.064,
+        "lng": 121.583,
+        "name": "內湖交流道入口"
+      },
+      "destination": {
+        "lat": 25.048,
+        "lng": 121.298,
+        "name": "南崁交流道出口"
+      },
+      "waypoints": [],
+      "vehicleType": "HEAVY_MOTORCYCLE",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-02",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "國道一號汐止至五股段及主線路段"
+          }
+        ],
+        "mustAllowSegments": [],
+        "mustTraverseSegments": [],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "FORBIDDEN",
+        "comments": "交通部尚未公告開放國道一號主線行駛大型重機，路徑規劃必須強制排除。"
+      }
+    },
+    {
+      "caseId": "TW-TC-04",
+      "title": "台76線八卦山長隧道及銜接段 大型重機特例禁止通行",
+      "description": "台76線快速公路全線原則上允許大型重機，但八卦山隧道及銜接段（26k+500至32k+600）因排煙與避難安全明令禁止大型重機，需強制繞道148縣道。",
+      "legalReference": [
+        {
+          "authority": "交通部公路局",
+          "documentTitle": "交通部公路局快速公路由大型重型機車行駛路段及限制一覽表",
+          "url": "https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790",
+          "publishedAt": "2012-07-01",
+          "effectiveAt": "2012-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "台76線26k+500至32k+600段（林厝交流道至中興系統段，含八卦山隧道）禁止大型重型機車通行",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 23.951,
+        "lng": 120.602,
+        "name": "台76線林厝交流道東向入口"
+      },
+      "destination": {
+        "lat": 23.948,
+        "lng": 120.665,
+        "name": "台76線中興系統交流道西向出口"
+      },
+      "waypoints": [],
+      "vehicleType": "HEAVY_MOTORCYCLE",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-04",
+            "direction": "EASTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "台76線八卦山隧道及銜接段 (26k+500~32k+600)"
+          }
+        ],
+        "mustAllowSegments": [],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-COUNTY-148",
+            "direction": "EASTBOUND",
+            "sourceType": "ROAD_NAME_HINT",
+            "notes": "員草路 (148縣道員林南投段)"
+          }
+        ],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "FORBIDDEN",
+        "comments": "八卦山隧道是快速公路上明確公告禁止大型重機的 6.1 公里管制路段（26.5k至32.6k）。"
+      }
+    },
+    {
+      "caseId": "TW-TC-05",
+      "title": "台64線快速公路 大型重機合法通行",
+      "description": "驗證大型重機行駛台64線八里新店快速公路板橋至中和段，全線高架主線合法通行。",
+      "legalReference": [
+        {
+          "authority": "交通部公路局",
+          "documentTitle": "交通部公路局快速公路由大型重型機車行駛路段及限制一覽表",
+          "url": "https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790",
+          "publishedAt": "2012-07-01",
+          "effectiveAt": "2012-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "台64線全線開放大型重型機車通行",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 25.021,
+        "lng": 121.468,
+        "name": "台64線板橋匝道入口"
+      },
+      "destination": {
+        "lat": 24.992,
+        "lng": 121.503,
+        "name": "台64線中和端出口"
+      },
+      "waypoints": [],
+      "vehicleType": "HEAVY_MOTORCYCLE",
+      "expectedOutcome": {
+        "mustForbidSegments": [],
+        "mustAllowSegments": [
+          {
+            "segmentRef": "TW-SEG-05",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "台64線主線高架段"
+          }
+        ],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SEG-05",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID"
+          }
+        ],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "ALLOWED",
+        "comments": "省道快速公路依法開放大型重型機車行駛。"
+      }
+    },
+    {
+      "caseId": "TW-TC-06",
+      "title": "台64線快速公路 普通機車禁止通行",
+      "description": "驗證普通機車行駛板橋至中和段時，台64線快速公路高架段必須強制排除，引導行駛平面道路。",
+      "legalReference": [
+        {
+          "authority": "交通部",
+          "documentTitle": "高速公路及快速公路交通管制規則",
+          "url": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=K0040019&flno=19",
+          "publishedAt": "2006-06-30",
+          "effectiveAt": "2006-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "第19條",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 25.021,
+        "lng": 121.468,
+        "name": "板橋區民生路二段"
+      },
+      "destination": {
+        "lat": 24.992,
+        "lng": 121.503,
+        "name": "中和區中正路"
+      },
+      "waypoints": [],
+      "vehicleType": "SCOOTER",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-05",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "台64線高架快速公路全線"
+          }
+        ],
+        "mustAllowSegments": [],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SURFACE-BANQIAO-ZHONGHE",
+            "direction": "SOUTHBOUND",
+            "sourceType": "ROAD_NAME_HINT",
+            "notes": "民生路/中正路平面道路"
+          }
+        ],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "FORBIDDEN",
+        "comments": "普通機車嚴格禁行省道快速公路。"
+      }
+    },
+    {
+      "caseId": "TW-TC-07",
+      "title": "台北市民大道高架道路 大型重機通行（待台北市公報複查）",
+      "description": "驗證大型重機行駛市民大道高架道路（新生引道至向陽路出口），依台北市交通管制規定開放通行。",
+      "legalReference": [
+        {
+          "authority": "台北市政府交通局",
+          "documentTitle": "台北市快速道路及高架道路大型重型機車通行管理規定",
+          "url": "https://www-ws.gov.taipei/",
+          "publishedAt": "2007-11-01",
+          "effectiveAt": "2007-11-01",
+          "verifiedAt": "2026-10-14",
+          "section": "台北市高架道路開放大型重型機車行駛管理規定",
+          "verificationStatus": "RECHECK_REQUIRED"
+        }
+      ],
+      "origin": {
+        "lat": 25.044,
+        "lng": 121.532,
+        "name": "市民大道高架新生北路引道"
+      },
+      "destination": {
+        "lat": 25.052,
+        "lng": 121.592,
+        "name": "市民大道高架向陽路出入口"
+      },
+      "waypoints": [],
+      "vehicleType": "HEAVY_MOTORCYCLE",
+      "expectedOutcome": {
+        "mustForbidSegments": [],
+        "mustAllowSegments": [
+          {
+            "segmentRef": "TW-SEG-06",
+            "direction": "EASTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "市民大道高架主線"
+          }
+        ],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SEG-06",
+            "direction": "EASTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID"
+          }
+        ],
+        "expectedWarningOnUnknownData": true,
+        "legalExpectation": "ALLOWED",
+        "comments": "台北市市區高架開放大型重機，但屬地方政府自治管制，Stage 2 需比對市府公報號碼。"
+      }
+    },
+    {
+      "caseId": "TW-TC-08",
+      "title": "台北市民大道高架道路 普通機車禁止通行",
+      "description": "驗證普通機車行駛市民大道時，市民大道高架段全線禁行機車，必須行駛市民大道平面車道。",
+      "legalReference": [
+        {
+          "authority": "台北市政府交通局",
+          "documentTitle": "道路交通安全規則",
+          "url": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=K0040013&flno=99",
+          "publishedAt": "2023-05-03",
+          "effectiveAt": "2023-05-03",
+          "verifiedAt": "2026-10-14",
+          "section": "第99條及高架橋禁行機慢車標誌",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 25.044,
+        "lng": 121.532,
+        "name": "市民大道三段平面"
+      },
+      "destination": {
+        "lat": 25.052,
+        "lng": 121.592,
+        "name": "市民大道七段平面"
+      },
+      "waypoints": [],
+      "vehicleType": "SCOOTER",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-06",
+            "direction": "EASTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "市民大道高架橋主線及各匝道"
+          }
+        ],
+        "mustAllowSegments": [],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SURFACE-SHIMIN",
+            "direction": "EASTBOUND",
+            "sourceType": "ROAD_NAME_HINT",
+            "notes": "市民大道平面車道"
+          }
+        ],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "FORBIDDEN",
+        "comments": "市區高架道路普通機車禁入。"
+      }
+    },
+    {
+      "caseId": "TW-TC-09",
+      "title": "台北大橋 普通機車必須行駛專用機車道",
+      "description": "驗證普通機車由台北大同區前往三重時，必須行走台北大橋機車專用引道與車道，禁止進入主線快車道。",
+      "legalReference": [
+        {
+          "authority": "台北市政府工務局 / 新北市政府交通局",
+          "documentTitle": "台北大橋交通分流管理辦法與標線標誌規定",
+          "url": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=K0040013&flno=99",
+          "publishedAt": "2020-01-01",
+          "effectiveAt": "2020-01-01",
+          "verifiedAt": "2026-10-14",
+          "section": "道安規則第99條及現地專用機車道分流標線",
+          "verificationStatus": "RECHECK_REQUIRED"
+        }
+      ],
+      "origin": {
+        "lat": 25.0625,
+        "lng": 121.512,
+        "name": "民權西路/延平北路口"
+      },
+      "destination": {
+        "lat": 25.0635,
+        "lng": 121.4985,
+        "name": "三重重新路一段/福德北路口"
+      },
+      "waypoints": [],
+      "vehicleType": "SCOOTER",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-08",
+            "direction": "WESTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "台北大橋主橋快車道"
+          }
+        ],
+        "mustAllowSegments": [
+          {
+            "segmentRef": "TW-SEG-07",
+            "direction": "WESTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "台北大橋專用機車道"
+          }
+        ],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SEG-07",
+            "direction": "WESTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID"
+          }
+        ],
+        "expectedWarningOnUnknownData": true,
+        "legalExpectation": "ALLOWED",
+        "comments": "台北大橋設有獨立高架專用機車引道，普通機車必須行駛該專用道。Stage 2 需映射實體 Way ID。"
+      }
+    },
+    {
+      "caseId": "TW-TC-10",
+      "title": "台北大橋 汽車禁止行駛機車專用道",
+      "description": "驗證小客車行駛台北大橋時，必須行駛主線快車道，禁止闖入寬度受限之機車專用引道。",
+      "legalReference": [
+        {
+          "authority": "交通部",
+          "documentTitle": "道路交通安全規則",
+          "url": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=K0040013&flno=95",
+          "publishedAt": "2023-05-03",
+          "effectiveAt": "2023-05-03",
+          "verifiedAt": "2026-10-14",
+          "section": "第95條車輛不得行駛機慢車專用道",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 25.0625,
+        "lng": 121.512,
+        "name": "民權西路快車道"
+      },
+      "destination": {
+        "lat": 25.0635,
+        "lng": 121.4985,
+        "name": "重新路一段快車道"
+      },
+      "waypoints": [],
+      "vehicleType": "CAR",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-07",
+            "direction": "WESTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "台北大橋專用機車道"
+          }
+        ],
+        "mustAllowSegments": [
+          {
+            "segmentRef": "TW-SEG-08",
+            "direction": "WESTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "台北大橋主線快車道"
+          }
+        ],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SEG-08",
+            "direction": "WESTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID"
+          }
+        ],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "ALLOWED",
+        "comments": "汽車不得行駛機慢車專用道。"
+      }
+    },
+    {
+      "caseId": "TW-TC-11",
+      "title": "台9線蘇花改東澳隧道 大型重機通行（待公路局通車公報複查）",
+      "description": "驗證大型重機行駛台9線蘇花改蘇澳至東澳段（白米景觀橋、東澳隧道），交通部公路局已常態化正式開放通行。",
+      "legalReference": [
+        {
+          "authority": "交通部公路局東區養護工程分局",
+          "documentTitle": "台9線蘇花改常態開放大型重型機車通行通報",
+          "url": "https://www.thb.gov.tw/",
+          "publishedAt": "2022-08-30",
+          "effectiveAt": "2022-09-01",
+          "verifiedAt": "2026-10-14",
+          "section": "蘇花改蘇澳至東澳隧道常態開放大型重型機車",
+          "verificationStatus": "RECHECK_REQUIRED"
+        }
+      ],
+      "origin": {
+        "lat": 24.588,
+        "lng": 121.851,
+        "name": "台9線蘇花改蘇澳端起點"
+      },
+      "destination": {
+        "lat": 24.519,
+        "lng": 121.834,
+        "name": "台9線東澳交流道出口"
+      },
+      "waypoints": [],
+      "vehicleType": "HEAVY_MOTORCYCLE",
+      "expectedOutcome": {
+        "mustForbidSegments": [],
+        "mustAllowSegments": [
+          {
+            "segmentRef": "TW-SEG-09",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "台9線蘇花改東澳隧道段"
+          }
+        ],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SEG-09",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID"
+          }
+        ],
+        "expectedWarningOnUnknownData": true,
+        "legalExpectation": "ALLOWED",
+        "comments": "公路局已常態開放大型重機行駛蘇花改，因官網公報系統改版，Stage 2 需補正永久公報連結。"
+      }
+    },
+    {
+      "caseId": "TW-TC-12",
+      "title": "台9線蘇花改東澳隧道 普通機車禁止通行",
+      "description": "驗證普通機車由蘇澳前往東澳時，蘇花改東澳隧道段禁止普通機車通行，必須行駛台9丁線（舊蘇花公路）。",
+      "legalReference": [
+        {
+          "authority": "交通部公路局",
+          "documentTitle": "台9線蘇花改各隧道車種通行管制通告",
+          "url": "https://www.thb.gov.tw/",
+          "publishedAt": "2020-01-05",
+          "effectiveAt": "2020-01-06",
+          "verifiedAt": "2026-10-14",
+          "section": "東澳隧道長隧道車種管制禁止未滿250cc機車",
+          "verificationStatus": "RECHECK_REQUIRED"
+        }
+      ],
+      "origin": {
+        "lat": 24.588,
+        "lng": 121.851,
+        "name": "蘇澳市區 (中山路一段)"
+      },
+      "destination": {
+        "lat": 24.519,
+        "lng": 121.834,
+        "name": "東澳市區 (蘇花路三段)"
+      },
+      "waypoints": [],
+      "vehicleType": "SCOOTER",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-09",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "蘇花改東澳隧道"
+          }
+        ],
+        "mustAllowSegments": [],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-ROUTE-9D",
+            "direction": "SOUTHBOUND",
+            "sourceType": "ROAD_NAME_HINT",
+            "notes": "台9丁線 (舊蘇花公路蘇澳東澳段)"
+          }
+        ],
+        "expectedWarningOnUnknownData": true,
+        "legalExpectation": "FORBIDDEN",
+        "comments": "普通機車不可進入東澳長隧道，必須強制引導至台9丁線。Stage 2 需映射實體 Way ID。"
+      }
+    },
+    {
+      "caseId": "TW-TC-13",
+      "title": "台9線蘇花改仁水隧道 普通機車合法行駛專用慢車道",
+      "description": "驗證普通機車行駛台9線蘇花改仁水隧道段（和仁至大清水），該隧道設計有外側專用慢車道，普通機車合法通行。",
+      "legalReference": [
+        {
+          "authority": "交通部公路局東區養護工程分局",
+          "documentTitle": "台9線蘇花改仁水隧道開放普通重型機車通行管理規定",
+          "url": "https://www.thb.gov.tw/",
+          "publishedAt": "2020-01-06",
+          "effectiveAt": "2020-01-06",
+          "verifiedAt": "2026-10-14",
+          "section": "仁水隧道 155k+800 至 158k+750 外側專用慢車道",
+          "verificationStatus": "RECHECK_REQUIRED"
+        }
+      ],
+      "origin": {
+        "lat": 24.238,
+        "lng": 121.728,
+        "name": "台9線和仁段 (155k+500)"
+      },
+      "destination": {
+        "lat": 24.208,
+        "lng": 121.718,
+        "name": "台9線大清水段 (159k+000)"
+      },
+      "waypoints": [],
+      "vehicleType": "SCOOTER",
+      "expectedOutcome": {
+        "mustForbidSegments": [],
+        "mustAllowSegments": [
+          {
+            "segmentRef": "TW-SEG-10",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "仁水隧道外側專用慢車道"
+          }
+        ],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SEG-10",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID"
+          }
+        ],
+        "expectedWarningOnUnknownData": true,
+        "legalExpectation": "ALLOWED",
+        "comments": "仁水隧道為蘇花改全線唯一依法設置專用慢車道並常態開放白牌機車行駛之隧道。"
+      }
+    },
+    {
+      "caseId": "TW-TC-14",
+      "title": "台9線南迴改草埔森永長隧道 大型重機通行（待公路局公報複查）",
+      "description": "驗證大型重機行駛台9線南迴公路拓寬改善路段（草埔森永隧道 437k-442k），交通部公路局已常態化正式開放通行。",
+      "legalReference": [
+        {
+          "authority": "交通部公路局南區養護工程分局",
+          "documentTitle": "台9線草埔森永隧道常態開放大型重型機車通行通報",
+          "url": "https://www.thb.gov.tw/",
+          "publishedAt": "2021-04-30",
+          "effectiveAt": "2021-04-30",
+          "verifiedAt": "2026-10-14",
+          "section": "台9線 437k+600 至 442k+200 常態開放大型重型機車",
+          "verificationStatus": "RECHECK_REQUIRED"
+        }
+      ],
+      "origin": {
+        "lat": 22.302,
+        "lng": 120.871,
+        "name": "台9線南迴改安朔交控中心"
+      },
+      "destination": {
+        "lat": 22.251,
+        "lng": 120.828,
+        "name": "台9線草埔段出口"
+      },
+      "waypoints": [],
+      "vehicleType": "HEAVY_MOTORCYCLE",
+      "expectedOutcome": {
+        "mustForbidSegments": [],
+        "mustAllowSegments": [
+          {
+            "segmentRef": "TW-SEG-11",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "草埔森永隧道主線"
+          }
+        ],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SEG-11",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID"
+          }
+        ],
+        "expectedWarningOnUnknownData": true,
+        "legalExpectation": "ALLOWED",
+        "comments": "南迴改草埔森永隧道於 2021 年起正式常態開放大型重型機車通行。Stage 2 需補正永久公報 ID。"
+      }
+    },
+    {
+      "caseId": "TW-TC-15",
+      "title": "台9線南迴改草埔森永長隧道 普通機車禁止通行",
+      "description": "驗證普通機車由台東達仁前往屏東獅子鄉時，草埔森永長隧道禁止普通機車通行，必須行駛台9戊線（舊南迴公路壽卡段）。",
+      "legalReference": [
+        {
+          "authority": "交通部公路局",
+          "documentTitle": "台9線草埔森永長隧道通行管理通告",
+          "url": "https://www.thb.gov.tw/",
+          "publishedAt": "2019-12-23",
+          "effectiveAt": "2019-12-23",
+          "verifiedAt": "2026-10-14",
+          "section": "草埔森永隧道車種管制禁止未滿250cc機車",
+          "verificationStatus": "RECHECK_REQUIRED"
+        }
+      ],
+      "origin": {
+        "lat": 22.302,
+        "lng": 120.871,
+        "name": "台東達仁鄉安朔村"
+      },
+      "destination": {
+        "lat": 22.251,
+        "lng": 120.828,
+        "name": "屏東獅子鄉草埔村"
+      },
+      "waypoints": [],
+      "vehicleType": "SCOOTER",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-11",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "草埔森永隧道"
+          }
+        ],
+        "mustAllowSegments": [],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-ROUTE-9E",
+            "direction": "SOUTHBOUND",
+            "sourceType": "ROAD_NAME_HINT",
+            "notes": "台9戊線 (舊南迴公路壽卡段)"
+          }
+        ],
+        "expectedWarningOnUnknownData": true,
+        "legalExpectation": "FORBIDDEN",
+        "comments": "普通機車不可進入草埔長隧道，必須由台9戊線翻越壽卡。Stage 2 需映射實體 Way ID。"
+      }
+    },
+    {
+      "caseId": "TW-TC-16",
+      "title": "國道五號雪山長隧道 大型重機嚴格禁止通行",
+      "description": "驗證大型重機行駛坪林至頭城路段時，國道五號雪山長隧道依高公局管制公告嚴格禁止通行，路徑規劃必須強制排除並走台9線北宜公路。",
+      "legalReference": [
+        {
+          "authority": "交通部高速公路局",
+          "documentTitle": "大型重型機車行駛高速公路說明與通告",
+          "url": "https://www.freeway.gov.tw/Publish.aspx?cnid=1778",
+          "publishedAt": "2006-06-30",
+          "effectiveAt": "2006-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "國道五號雪山隧道段全線未開放大型重機通行",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 24.938,
+        "lng": 121.711,
+        "name": "國道五號坪林交流道南向入口"
+      },
+      "destination": {
+        "lat": 24.848,
+        "lng": 121.791,
+        "name": "國道五號頭城交流道出口"
+      },
+      "waypoints": [],
+      "vehicleType": "HEAVY_MOTORCYCLE",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-03",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "國道五號雪山隧道段 (15k 至 30k)"
+          }
+        ],
+        "mustAllowSegments": [],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-ROUTE-9-BEIYI",
+            "direction": "SOUTHBOUND",
+            "sourceType": "ROAD_NAME_HINT",
+            "notes": "台9線北宜公路坪林頭城段 (九彎十八拐)"
+          }
+        ],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "FORBIDDEN",
+        "comments": "國道五號與雪山長隧道全線未開放大型重機通行，必須強制繞行北宜公路。"
+      }
+    },
+    {
+      "caseId": "TW-TC-17",
+      "title": "台74線快速公路 草湖交流道至霧峰交流道段 大型重機禁止通行",
+      "description": "驗證大型重機行駛台74線快速公路草湖交流道至霧峰交流道（34k+000至39k+235），依公路局公告該銜接國道3號高架段禁止大型重機通行，算路引擎必須強制剔除。",
+      "legalReference": [
+        {
+          "authority": "交通部公路局",
+          "documentTitle": "交通部公路局快速公路由大型重型機車行駛路段及限制一覽表",
+          "url": "https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790",
+          "publishedAt": "2012-07-01",
+          "effectiveAt": "2012-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "台74線34k+000至39k+235段（草湖交流道至霧峰交流道）禁止大型重型機車通行",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 24.0845,
+        "lng": 120.7025,
+        "name": "台74線草湖交流道南向匝道 (34k+000)"
+      },
+      "destination": {
+        "lat": 24.062,
+        "lng": 120.697,
+        "name": "台74線霧峰交流道端/銜接國道3號系統 (39k+235)"
+      },
+      "waypoints": [],
+      "vehicleType": "HEAVY_MOTORCYCLE",
+      "expectedOutcome": {
+        "mustForbidSegments": [
+          {
+            "segmentRef": "TW-SEG-15B",
+            "direction": "SOUTHBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "台74線草湖交流道至霧峰交流道 (34k+000~39k+235)"
+          }
+        ],
+        "mustAllowSegments": [],
+        "mustTraverseSegments": [],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "FORBIDDEN",
+        "comments": "台74線快官至草湖交流道（0k-34k）開放，但草湖交流道至霧峰交流道（34k-39k+235）依法禁止大型重機。注意：大里二交流道位於32k+854，草湖交流道位於34k+000，兩者不同。"
+      }
+    },
+    {
+      "caseId": "TW-TC-18",
+      "title": "台74線快速公路 快官交流道至草湖交流道段 大型重機合法通行",
+      "description": "驗證大型重機行駛台74線台中環線快官交流道至草湖交流道（0k+000至34k+000），全線主線高架合法通行。",
+      "legalReference": [
+        {
+          "authority": "交通部公路局",
+          "documentTitle": "交通部公路局快速公路由大型重型機車行駛路段及限制一覽表",
+          "url": "https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790",
+          "publishedAt": "2012-07-01",
+          "effectiveAt": "2012-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "台74線0k+000至34k+000段（快官交流道至草湖交流道）開放大型重型機車通行",
+          "verificationStatus": "VERIFIED"
+        }
+      ],
+      "origin": {
+        "lat": 24.112,
+        "lng": 120.598,
+        "name": "台74線快官交流道入口 (0k+000)"
+      },
+      "destination": {
+        "lat": 24.0845,
+        "lng": 120.7025,
+        "name": "台74線草湖交流道出口 (34k+000)"
+      },
+      "waypoints": [],
+      "vehicleType": "HEAVY_MOTORCYCLE",
+      "expectedOutcome": {
+        "mustForbidSegments": [],
+        "mustAllowSegments": [
+          {
+            "segmentRef": "TW-SEG-15A",
+            "direction": "EASTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID",
+            "notes": "台74線快官交流道至草湖交流道段主線"
+          }
+        ],
+        "mustTraverseSegments": [
+          {
+            "segmentRef": "TW-SEG-15A",
+            "direction": "EASTBOUND",
+            "sourceType": "OFFICIAL_SEGMENT_ID"
+          }
+        ],
+        "expectedWarningOnUnknownData": false,
+        "legalExpectation": "ALLOWED",
+        "comments": "台74線0k+000至34k+000（快官至草湖交流道）為公路局法定開放大型重機行駛之快速公路高架段。"
+      }
+    }
+  ]
 }
