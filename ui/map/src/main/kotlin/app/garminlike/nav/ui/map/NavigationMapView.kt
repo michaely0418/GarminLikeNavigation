@@ -48,18 +48,24 @@ class NavigationMapView(context: Context) : FrameLayout(context) {
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { readyMap ->
             map = readyMap
-            // A valid network/GPS fix may arrive before asynchronous MapLibre
-            // initialization finishes, particularly during screen rotation.
-            // Never replace it with the hard-coded Taipei preview camera.
-            val fix = currentLocation
-            readyMap.cameraPosition = CameraPosition.Builder()
-                .target(
-                    if (fix == null) TAIPEI
-                    else LatLng(fix.latitudeDeg, fix.longitudeDeg)
-                )
-                .zoom(if (fix == null) 10.5 else 16.0)
-                .build()
-            if (fix != null) centeredOnFirstFix = true
+            // MapView.onCreate(savedInstanceState) restores the user's camera.
+            // Never override it on rotation: the user may have panned/zoomed
+            // away from the live location before changing orientation.
+            // Also prevent the first post-rotation GPS fix from auto-recentering.
+            if (savedInstanceState != null) {
+                centeredOnFirstFix = true
+            } else {
+                // On a fresh launch, location can arrive before getMapAsync.
+                val fix = currentLocation
+                readyMap.cameraPosition = CameraPosition.Builder()
+                    .target(
+                        if (fix == null) TAIPEI
+                        else LatLng(fix.latitudeDeg, fix.longitudeDeg)
+                    )
+                    .zoom(if (fix == null) 10.5 else 16.0)
+                    .build()
+                if (fix != null) centeredOnFirstFix = true
+            }
             applyStyle()
         }
     }
