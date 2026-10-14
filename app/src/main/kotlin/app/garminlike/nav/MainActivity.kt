@@ -3,6 +3,7 @@ package app.garminlike.nav
 import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -124,6 +125,11 @@ class MainActivity : Activity() {
             setPadding(dp(16), 0, 0, dp(8))
         })
         root.addView(vehicleSelector())
+        root.addView(actionButton("HUD 展示（模擬資料）") {
+            startActivity(Intent(this@MainActivity, HudPreviewActivity::class.java))
+        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)).apply {
+            setMargins(dp(10), 0, dp(10), dp(6))
+        })
         root.addView(mapWidget, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
         ))
@@ -334,7 +340,20 @@ class MainActivity : Activity() {
     }
 
     override fun onStart() { super.onStart(); mapWidget.onStart() }
-    override fun onResume() { super.onResume(); mapWidget.onResume(); updateConnectivityStatus(); startLocationUpdates() }
+    override fun onResume() {
+        super.onResume()
+        mapWidget.onResume()
+        // HUD preview stores the same vehicle type in SharedPreferences.
+        val persisted = runCatching {
+            VehicleType.valueOf(preferences.getString(MODE_KEY, VehicleType.CAR.name)!!)
+        }.getOrDefault(VehicleType.CAR)
+        if (modeState.mode.value != persisted) {
+            modeState.select(persisted)
+            updateVehicleButtons()
+        }
+        updateConnectivityStatus()
+        startLocationUpdates()
+    }
     override fun onPause() { stopLocationUpdates(); mapWidget.onPause(); super.onPause() }
     override fun onStop() { mapWidget.onStop(); super.onStop() }
     override fun onLowMemory() { super.onLowMemory(); mapWidget.onLowMemory() }
