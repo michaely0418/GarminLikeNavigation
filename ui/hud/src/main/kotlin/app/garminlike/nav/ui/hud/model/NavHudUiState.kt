@@ -9,6 +9,34 @@ import app.garminlike.nav.core.model.SafetyAlertKind
 import app.garminlike.nav.core.model.VehicleType
 
 /**
+ * Explicit GPS status representation for the HUD.
+ * Prevents falsely assuming a valid GPS fix when running without active location feeds.
+ *
+ * Spec reference: Review H1 requirement.
+ */
+enum class GpsStatus {
+    /** Location provider uninitialized, detached, or permissions not yet evaluated. */
+    UNKNOWN,
+    /** Actively waiting for satellite fix or coarse fallback fix. */
+    SEARCHING,
+    /** Valid GPS fix obtained with acceptable horizontal accuracy. */
+    VALID,
+    /** GPS signal lost or provider disabled during active navigation. */
+    LOST
+}
+
+/**
+ * Identifies which demo fixture is currently selected in the HUD demo bar.
+ * Spec reference: Review H4 requirement.
+ */
+enum class DemoModeSelection {
+    UNROUTED,
+    CAR,
+    SCOOTER,
+    HEAVY_MOTORCYCLE
+}
+
+/**
  * Pure Kotlin UI state for the mobile Garmin-like HUD.
  *
  * Decoupled from Compose runtime to enable thorough JVM unit testing and
@@ -30,7 +58,7 @@ data class NavHudUiState(
     val remainingDurationMinutes: Long = 0,
     val etaFormatted: String = "--:--",
     val isOfflineMode: Boolean = false,
-    val isGpsLost: Boolean = false,
+    val gpsStatus: GpsStatus = GpsStatus.UNKNOWN,
     val isMuted: Boolean = false,
     val isDemoMode: Boolean = true,
     val demoInstructionText: String? = null,
@@ -42,10 +70,26 @@ data class NavHudUiState(
     /** True if there is no active route, clearly indicating unrouted / idle state. */
     val isUnrouted: Boolean get() = phase == NavigationPhase.IDLE || nextManeuver == null
 
+    /** Computes which demo button should be visually highlighted. */
+    val demoSelection: DemoModeSelection get() = when {
+        isUnrouted -> DemoModeSelection.UNROUTED
+        vehicleType == VehicleType.CAR -> DemoModeSelection.CAR
+        vehicleType == VehicleType.SCOOTER -> DemoModeSelection.SCOOTER
+        vehicleType == VehicleType.HEAVY_MOTORCYCLE -> DemoModeSelection.HEAVY_MOTORCYCLE
+        else -> DemoModeSelection.UNROUTED
+    }
+
     companion object {
+        /**
+         * Special sourceId prefix designating simulated test fixtures.
+         * Spec reference: Review H2 requirement.
+         */
+        const val DEMO_SOURCE_PREFIX = "DEMO_MOCK_"
+
         /**
          * Default unrouted state for Stage 1.
          * Explicitly displays DEMO / NO ROUTE rather than fabricating real-time navigation telemetry.
+         * GPS status defaults to UNKNOWN (not VALID) to prevent false claims of real GPS fixes.
          */
         fun demoInitial(vehicleType: VehicleType = VehicleType.CAR): NavHudUiState = NavHudUiState(
             vehicleType = vehicleType,
@@ -61,7 +105,7 @@ data class NavHudUiState(
             remainingDurationMinutes = 0,
             etaFormatted = "--:--",
             isOfflineMode = false,
-            isGpsLost = false,
+            gpsStatus = GpsStatus.UNKNOWN,
             isMuted = false,
             isDemoMode = true,
             demoInstructionText = "未開始導航 (展示模式)",
@@ -70,7 +114,7 @@ data class NavHudUiState(
 
         /**
          * Sample simulation state for CAR navigation demonstration.
-         * Corresponds to wireframe mockup in docs/HUD_WIREFRAME.md Section 3.1.
+         * Uses clearly designated MOCK alert metadata to prevent confusing QA simulation with official bulletins.
          */
         fun demoCarGuiding(): NavHudUiState = NavHudUiState(
             vehicleType = VehicleType.CAR,
@@ -87,24 +131,24 @@ data class NavHudUiState(
             distanceToManeuverMeters = 350.0,
             laneGuidanceText = "[ ^ ][ ^ ][ \\ ][ \\ ]",
             activeAlert = SafetyAlert(
-                alertId = "ALERT-NPA-001",
+                alertId = "DEMO-ALERT-001",
                 kind = SafetyAlertKind.SPEED_CAMERA,
-                sourceId = "警政署 2026-09",
-                sourcePublishedAtEpochMillis = 1756684800000L,
+                sourceId = "${DEMO_SOURCE_PREFIX}TAIPEI_TEST",
+                sourcePublishedAtEpochMillis = null,
                 expiresAtEpochMillis = null,
                 cameraBearingDeg = 180.0,
                 directionMatch = true,
                 distanceAlongRouteMeters = 400.0,
-                confidence = 1.0,
-                message = "前方 400m 固定測速 60km/h",
-                routeCorrelated = true,
-                evidenceIds = listOf("TW-CAM-001")
+                confidence = 0.0, // Mock fixture: no production confidence guarantee
+                message = "[展示模擬] 前方 400m 固定測速 60km/h",
+                routeCorrelated = false,
+                evidenceIds = emptyList()
             ),
             remainingDistanceKm = 4.8,
             remainingDurationMinutes = 8,
             etaFormatted = "17:45",
             isOfflineMode = false,
-            isGpsLost = false,
+            gpsStatus = GpsStatus.VALID, // Simulated fix for guiding preview
             isMuted = false,
             isDemoMode = true,
             demoInstructionText = "靠左行駛 進入 國道三號甲線",
@@ -113,7 +157,7 @@ data class NavHudUiState(
 
         /**
          * Sample simulation state for SCOOTER navigation demonstration.
-         * Corresponds to wireframe mockup in docs/HUD_WIREFRAME.md Section 3.2.
+         * Emphasizes two-stage left turn guidance with clearly flagged mock alerts.
          */
         fun demoScooterGuiding(): NavHudUiState = NavHudUiState(
             vehicleType = VehicleType.SCOOTER,
@@ -130,24 +174,24 @@ data class NavHudUiState(
             distanceToManeuverMeters = 150.0,
             laneGuidanceText = "機車兩段待轉區",
             activeAlert = SafetyAlert(
-                alertId = "ALERT-SEC-002",
+                alertId = "DEMO-ALERT-002",
                 kind = SafetyAlertKind.SECTION_SPEED,
-                sourceId = "新北市警局 2026-08",
-                sourcePublishedAtEpochMillis = 1754006400000L,
+                sourceId = "${DEMO_SOURCE_PREFIX}NTPC_TEST",
+                sourcePublishedAtEpochMillis = null,
                 expiresAtEpochMillis = null,
                 cameraBearingDeg = 90.0,
                 directionMatch = true,
                 distanceAlongRouteMeters = 250.0,
-                confidence = 1.0,
-                message = "區間測速起點 | 速限 50 km/h (全天候執法)",
-                routeCorrelated = true,
-                evidenceIds = listOf("TW-SEC-002")
+                confidence = 0.0,
+                message = "[展示模擬] 區間測速起點 | 速限 50 km/h",
+                routeCorrelated = false,
+                evidenceIds = emptyList()
             ),
             remainingDistanceKm = 2.3,
             remainingDurationMinutes = 7,
             etaFormatted = "17:12",
             isOfflineMode = false,
-            isGpsLost = false,
+            gpsStatus = GpsStatus.VALID,
             isMuted = false,
             isDemoMode = true,
             demoInstructionText = "兩段式左轉 (依標誌待轉)",
@@ -156,7 +200,7 @@ data class NavHudUiState(
 
         /**
          * Sample simulation state for HEAVY_MOTORCYCLE navigation demonstration.
-         * Highlights expressways legality and higher cruise speeds.
+         * Highlights expressways cruise speed with mock safety alert data.
          */
         fun demoHeavyMotorcycleGuiding(): NavHudUiState = NavHudUiState(
             vehicleType = VehicleType.HEAVY_MOTORCYCLE,
@@ -173,24 +217,24 @@ data class NavHudUiState(
             distanceToManeuverMeters = 1200.0,
             laneGuidanceText = "大型重型機車可通行主線",
             activeAlert = SafetyAlert(
-                alertId = "ALERT-TRAF-003",
+                alertId = "DEMO-ALERT-003",
                 kind = SafetyAlertKind.TRAFFIC_ENFORCEMENT,
-                sourceId = "公路局快速公路通報",
-                sourcePublishedAtEpochMillis = 1751328000000L,
+                sourceId = "${DEMO_SOURCE_PREFIX}HIGHWAY_TEST",
+                sourcePublishedAtEpochMillis = null,
                 expiresAtEpochMillis = null,
                 cameraBearingDeg = 270.0,
                 directionMatch = true,
                 distanceAlongRouteMeters = 800.0,
-                confidence = 1.0,
-                message = "前方 800m 快速公路科技執法",
-                routeCorrelated = true,
-                evidenceIds = listOf("TW-SEG-07")
+                confidence = 0.0,
+                message = "[展示模擬] 前方 800m 快速公路執法測試",
+                routeCorrelated = false,
+                evidenceIds = emptyList()
             ),
             remainingDistanceKm = 12.5,
             remainingDurationMinutes = 14,
             etaFormatted = "18:05",
             isOfflineMode = false,
-            isGpsLost = false,
+            gpsStatus = GpsStatus.VALID,
             isMuted = false,
             isDemoMode = true,
             demoInstructionText = "靠右行駛 往 台64線",

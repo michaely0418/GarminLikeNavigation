@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -35,9 +34,12 @@ import androidx.compose.ui.unit.sp
 import app.garminlike.nav.core.model.VehicleType
 import app.garminlike.nav.ui.hud.components.DemoNoRouteBanner
 import app.garminlike.nav.ui.hud.components.ManeuverGuidanceHeader
+import app.garminlike.nav.ui.hud.components.PortraitActionBar
+import app.garminlike.nav.ui.hud.components.PortraitTripStatsCard
 import app.garminlike.nav.ui.hud.components.SafetyAlertBanner
 import app.garminlike.nav.ui.hud.components.SpeedometerTelemetryCard
 import app.garminlike.nav.ui.hud.components.TripSummaryBar
+import app.garminlike.nav.ui.hud.model.GpsStatus
 import app.garminlike.nav.ui.hud.model.HudFormatters
 import app.garminlike.nav.ui.hud.model.NavHudUiState
 import app.garminlike.nav.ui.hud.theme.GarminHudTheme
@@ -140,7 +142,7 @@ fun LandscapeHudLayout(
 
                 if (state.isDemoMode) {
                     DemoNoRouteBanner(
-                        isUnrouted = state.isUnrouted,
+                        currentSelection = state.demoSelection,
                         onSelectUnroutedDemo = { onSelectDemoState(NavHudUiState.demoInitial(state.vehicleType)) },
                         onSelectCarDemo = { onSelectDemoState(NavHudUiState.demoCarGuiding()) },
                         onSelectScooterDemo = { onSelectDemoState(NavHudUiState.demoScooterGuiding()) },
@@ -206,6 +208,10 @@ fun LandscapeHudLayout(
 /**
  * Portrait HUD Layout (Motorcycle Handlebar / Phone Car Mount).
  * Spec reference: docs/HUD_WIREFRAME.md Section 3.2.
+ *
+ * Redesigned for H3: Eliminates horizontal squeezing on 320dp–390dp screens
+ * by cleanly separating Speedometer and Trip Stats into a 2-column telemetry row,
+ * supported by a dedicated full-width action bar below.
  */
 @Composable
 fun PortraitHudLayout(
@@ -219,7 +225,7 @@ fun PortraitHudLayout(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(10.dp)
+            .padding(8.dp)
     ) {
         // Top Status Bar
         TopStatusBar(state = state)
@@ -248,7 +254,7 @@ fun PortraitHudLayout(
 
         if (state.isDemoMode) {
             DemoNoRouteBanner(
-                isUnrouted = state.isUnrouted,
+                currentSelection = state.demoSelection,
                 onSelectUnroutedDemo = { onSelectDemoState(NavHudUiState.demoInitial(state.vehicleType)) },
                 onSelectCarDemo = { onSelectDemoState(NavHudUiState.demoCarGuiding()) },
                 onSelectScooterDemo = { onSelectDemoState(NavHudUiState.demoScooterGuiding()) },
@@ -271,15 +277,14 @@ fun PortraitHudLayout(
             MapViewportPlaceholder(isLandscape = false)
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        // Bottom Telemetry & Trip Bar Row
+        // Bottom Telemetry Row: Speedometer (left) + Trip Stats (right)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.Bottom
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Speed Card
             SpeedometerTelemetryCard(
                 currentSpeedKmh = state.currentSpeedKmh,
                 speedLimitKmh = state.speedLimitKmh,
@@ -287,31 +292,42 @@ fun PortraitHudLayout(
                 isCompact = true
             )
 
-            // Trip Bar
-            TripSummaryBar(
+            PortraitTripStatsCard(
                 remainingDistanceKm = state.remainingDistanceKm,
                 etaFormatted = state.etaFormatted,
                 remainingDurationMinutes = state.remainingDurationMinutes,
-                vehicleType = state.vehicleType,
                 isOfflineMode = state.isOfflineMode,
-                isMuted = state.isMuted,
-                onToggleMute = onToggleMute,
-                onCycleVehicleType = { onVehicleTypeChange(cycleVehicleType(state.vehicleType)) },
-                onResetClick = onResetClick,
                 modifier = Modifier.weight(1f)
             )
         }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Bottom Action Bar: Vehicle mode button + Mute + Recenter
+        PortraitActionBar(
+            vehicleType = state.vehicleType,
+            isMuted = state.isMuted,
+            onToggleMute = onToggleMute,
+            onCycleVehicleType = { onVehicleTypeChange(cycleVehicleType(state.vehicleType)) },
+            onResetClick = onResetClick
+        )
     }
 }
 
 /**
  * Top Status Bar displaying vehicle mode, GPS status, and offline indicator.
+ * Spec reference: Review H1 requirement.
  */
 @Composable
 private fun TopStatusBar(state: NavHudUiState) {
     val vehicleBadge = HudFormatters.formatVehicleTag(state.vehicleType)
-    val gpsStatus = if (state.isGpsLost) "GPS: 搜尋中..." else "GPS: 良好"
-    val gpsColor = if (state.isGpsLost) HudColors.CrimsonRed else HudColors.EmeraldGreen
+    val gpsStatusLabel = HudFormatters.formatGpsStatusLabel(state.gpsStatus)
+    val gpsColor = when (state.gpsStatus) {
+        GpsStatus.UNKNOWN -> HudColors.TextMuted
+        GpsStatus.SEARCHING -> HudColors.VividAmber
+        GpsStatus.VALID -> HudColors.EmeraldGreen
+        GpsStatus.LOST -> HudColors.CrimsonRed
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -329,7 +345,7 @@ private fun TopStatusBar(state: NavHudUiState) {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = gpsStatus,
+                text = gpsStatusLabel,
                 color = gpsColor,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium
@@ -447,7 +463,7 @@ fun HudLandscapeHeavyMotorcyclePreview() {
     }
 }
 
-@Preview(name = "Portrait Car Guiding", widthDp = 390, heightDp = 840, showBackground = true)
+@Preview(name = "Portrait Car Guiding (390x840)", widthDp = 390, heightDp = 840, showBackground = true)
 @Composable
 fun HudPortraitCarPreview() {
     GarminHudTheme {
@@ -455,7 +471,7 @@ fun HudPortraitCarPreview() {
     }
 }
 
-@Preview(name = "Portrait Scooter Guiding", widthDp = 390, heightDp = 840, showBackground = true)
+@Preview(name = "Portrait Scooter Guiding (390x840)", widthDp = 390, heightDp = 840, showBackground = true)
 @Composable
 fun HudPortraitScooterPreview() {
     GarminHudTheme {
@@ -463,7 +479,7 @@ fun HudPortraitScooterPreview() {
     }
 }
 
-@Preview(name = "Portrait Heavy Motorcycle Guiding", widthDp = 390, heightDp = 840, showBackground = true)
+@Preview(name = "Portrait Heavy Motorcycle Guiding (390x840)", widthDp = 390, heightDp = 840, showBackground = true)
 @Composable
 fun HudPortraitHeavyMotorcyclePreview() {
     GarminHudTheme {
@@ -471,10 +487,26 @@ fun HudPortraitHeavyMotorcyclePreview() {
     }
 }
 
-@Preview(name = "Unrouted Demo State", widthDp = 390, heightDp = 840, showBackground = true)
+@Preview(name = "Unrouted Demo State (390x840)", widthDp = 390, heightDp = 840, showBackground = true)
 @Composable
 fun HudNoRoutePreview() {
     GarminHudTheme {
         HudScreen(state = NavHudUiState.demoInitial(VehicleType.CAR))
+    }
+}
+
+@Preview(name = "Narrow 320dp Portrait Test", widthDp = 320, heightDp = 640, showBackground = true)
+@Composable
+fun HudPortraitNarrow320Preview() {
+    GarminHudTheme {
+        HudScreen(state = NavHudUiState.demoScooterGuiding())
+    }
+}
+
+@Preview(name = "Large Font 1.3x Portrait Test", widthDp = 390, heightDp = 840, fontScale = 1.3f, showBackground = true)
+@Composable
+fun HudPortraitLargeFontPreview() {
+    GarminHudTheme {
+        HudScreen(state = NavHudUiState.demoCarGuiding())
     }
 }

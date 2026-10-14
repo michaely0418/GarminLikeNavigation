@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.garminlike.nav.ui.hud.model.DemoModeSelection
 import app.garminlike.nav.ui.hud.theme.HudColors
 
 /**
@@ -29,17 +30,19 @@ import app.garminlike.nav.ui.hud.theme.HudColors
  * Prevents misleading drivers with unverified simulated telemetry while
  * providing an interactive demonstration of Car, Scooter, and Heavy Motorcycle modes.
  *
- * Spec reference: GitHub Issue #4 & docs/HUD_WIREFRAME.md.
+ * Spec reference: GitHub Issue #4 & Review H3/H4 requirements.
  */
 @Composable
 fun DemoNoRouteBanner(
-    isUnrouted: Boolean,
+    currentSelection: DemoModeSelection,
     onSelectUnroutedDemo: () -> Unit,
     onSelectCarDemo: () -> Unit,
     onSelectScooterDemo: () -> Unit,
     onSelectHeavyMotorcycleDemo: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isUnrouted = currentSelection == DemoModeSelection.UNROUTED
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -70,7 +73,7 @@ fun DemoNoRouteBanner(
                 }
 
                 Text(
-                    text = "Stage 1 Compose HUD 原型 (不含即時導航引擎)",
+                    text = "Stage 1 HUD 原型 (未連線引擎)",
                     color = HudColors.TextMuted,
                     fontSize = 11.sp
                 )
@@ -78,32 +81,32 @@ fun DemoNoRouteBanner(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Demo Mode Quick-Switch Buttons for Interactive Testing
+            // Demo Mode Quick-Switch Buttons for Interactive Testing (touch height >= 48dp)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 DemoModeButton(
                     label = "無路線",
-                    isActive = isUnrouted,
+                    isActive = currentSelection == DemoModeSelection.UNROUTED,
                     onClick = onSelectUnroutedDemo,
                     modifier = Modifier.weight(1f)
                 )
                 DemoModeButton(
                     label = "汽車",
-                    isActive = !isUnrouted,
+                    isActive = currentSelection == DemoModeSelection.CAR,
                     onClick = onSelectCarDemo,
                     modifier = Modifier.weight(1f)
                 )
                 DemoModeButton(
                     label = "機車",
-                    isActive = false,
+                    isActive = currentSelection == DemoModeSelection.SCOOTER,
                     onClick = onSelectScooterDemo,
                     modifier = Modifier.weight(1f)
                 )
                 DemoModeButton(
                     label = "重機",
-                    isActive = false,
+                    isActive = currentSelection == DemoModeSelection.HEAVY_MOTORCYCLE,
                     onClick = onSelectHeavyMotorcycleDemo,
                     modifier = Modifier.weight(1f)
                 )
@@ -124,17 +127,22 @@ private fun DemoModeButton(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
+            .heightIn(min = 48.dp) // Accessible driving touch target per H3
+            .clip(RoundedCornerShape(6.dp))
             .background(bg)
-            .border(1.dp, HudColors.CardBorder, RoundedCornerShape(4.dp))
+            .border(
+                1.dp,
+                if (isActive) HudColors.AzureBlue else HudColors.CardBorder,
+                RoundedCornerShape(6.dp)
+            )
             .clickable(onClick = onClick)
-            .padding(vertical = 6.dp),
+            .padding(horizontal = 4.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
             color = textColor,
-            fontSize = 11.sp,
+            fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )

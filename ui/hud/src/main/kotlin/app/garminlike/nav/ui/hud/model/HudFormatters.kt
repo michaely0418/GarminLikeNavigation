@@ -80,4 +80,15 @@ object HudFormatters {
         if (limitKmh == null || limitKmh <= 0) return false
         return currentSpeedKmh > limitKmh
     }
+
+    /**
+     * Localized status label for GPS tracking state.
+     * Spec reference: Review H1 requirement.
+     */
+    fun formatGpsStatusLabel(status: GpsStatus): String = when (status) {
+        GpsStatus.UNKNOWN -> "GPS: 未連接"
+        GpsStatus.SEARCHING -> "GPS: 搜尋中..."
+        GpsStatus.VALID -> "GPS: 良好"
+        GpsStatus.LOST -> "GPS: 訊號中斷"
+    }
 }

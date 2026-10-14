@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -23,12 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.garminlike.nav.core.model.SafetyAlert
 import app.garminlike.nav.core.model.SafetyAlertKind
+import app.garminlike.nav.ui.hud.model.NavHudUiState
 import app.garminlike.nav.ui.hud.theme.HudColors
 
 /**
  * Toast / Banner for safety and enforcement camera alerts along the route.
+ * Explicitly marks mock/demo fixtures to prevent confusing QA data with verified official alerts.
  *
- * Spec reference: docs/HUD_WIREFRAME.md Section 4.2.
+ * Spec reference: docs/HUD_WIREFRAME.md Section 4.2 & Review H2 requirement.
  */
 @Composable
 fun SafetyAlertBanner(
@@ -37,6 +38,7 @@ fun SafetyAlertBanner(
 ) {
     if (alert == null) return
 
+    val isMock = alert.sourceId.startsWith(NavHudUiState.DEMO_SOURCE_PREFIX) || alert.confidence == 0.0
     val isCritical = alert.kind == SafetyAlertKind.SPEED_CAMERA || alert.kind == SafetyAlertKind.SECTION_SPEED
     val bannerBg = if (isCritical) HudColors.CrimsonRedGlow else HudColors.VividAmberSubtle
     val accentColor = if (isCritical) HudColors.CrimsonRed else HudColors.VividAmber
@@ -91,13 +93,29 @@ fun SafetyAlertBanner(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Text(
-                    text = "來源: ${alert.sourceId}",
-                    color = HudColors.TextMuted,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isMock) {
+                        Text(
+                            text = "⚡ 模擬資料 (非實際執法點)",
+                            color = HudColors.VividAmber,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else {
+                        Text(
+                            text = "來源: ${alert.sourceId}",
+                            color = HudColors.TextMuted,
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
     }

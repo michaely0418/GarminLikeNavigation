@@ -83,4 +83,12 @@ class HudFormattersTest {
         assertFalse(HudFormatters.isOverspeed(70, null))
         assertFalse(HudFormatters.isOverspeed(70, 0))
     }
+
+    @Test
+    fun `formatGpsStatusLabel returns correct localized labels for all states`() {
+        assertEquals("GPS: 未連接", HudFormatters.formatGpsStatusLabel(app.garminlike.nav.ui.hud.model.GpsStatus.UNKNOWN))
+        assertEquals("GPS: 搜尋中...", HudFormatters.formatGpsStatusLabel(app.garminlike.nav.ui.hud.model.GpsStatus.SEARCHING))
+        assertEquals("GPS: 良好", HudFormatters.formatGpsStatusLabel(app.garminlike.nav.ui.hud.model.GpsStatus.VALID))
+        assertEquals("GPS: 訊號中斷", HudFormatters.formatGpsStatusLabel(app.garminlike.nav.ui.hud.model.GpsStatus.LOST))
+    }
 }

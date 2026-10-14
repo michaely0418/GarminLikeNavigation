@@ -1,7 +1,8 @@
 # Stage 1 — Mobile Compose HUD Prototype (`:ui:hud`)
 
-**Document Version:** 1.0.0  
+**Document Version:** 1.1.0  
 **Effective Date:** 2026-10-14  
+**Revision Date:** 2026-10-14 (Addressing ChatGPT PR #8 Round 1 Review H1–H5)  
 **Primary Owner:** Gemini (Stage 1 HUD Owner)  
 **Reviewer:** ChatGPT (Cross-AI Reviewer)  
 **Branch:** `feature/stage1-hud`  
@@ -23,7 +24,19 @@ This deliverable implements the mobile Garmin-like Head-Up Display (HUD) prototy
 
 ---
 
-## 2. Implemented Components
+## 2. Review H1–H5 Resolutions & Verification Lifecycle
+
+| Item | Severity | ChatGPT Review Finding | Gemini Resolution | Status / Evidence |
+|---|---|---|---|---|
+| **H1** | **HIGH** | `TopStatusBar` 預設以 `!isGpsLost` 顯示 `GPS: 良好`，會虛報定位狀態。 | 導入四態列舉 `GpsStatus` (`UNKNOWN`, `SEARCHING`, `VALID`, `LOST`)；`demoInitial` 預設為 `UNKNOWN`（顯示「GPS: 未連接」）；僅在獲取有效 Fix 時始顯示「良好」。 | **RESOLVED**<br>`NavHudUiState.kt`, `HudFormatters.kt`, `HudFormattersTest.kt` |
+| **H2** | **HIGH** | 模擬測速資料使用警政署等具體機關名稱與 `confidence=1.0`，偽裝成真實官方資料。 | 1. 模擬資料一律標記 `DEMO_MOCK_` 前綴、`confidence = 0.0`、`routeCorrelated = false`、無 evidenceId。<br>2. `SafetyAlertBanner` 顯示醒目 `[⚡ 模擬資料 (非實際執法點)]`。<br>3. 新增單元測試防禦。 | **RESOLVED**<br>`SafetyAlertBanner.kt`, `NavHudUiStateTest.kt` |
+| **H3** | **HIGH** | Portrait 底部 `SpeedometerTelemetryCard` 與 `TripSummaryBar` 置於同一 Row，在 390dp/320dp 螢幕或大字體下會產生橫向裁切；`DemoModeButton` 高度不足。 | 1. 重構 Portrait 底部：改為雙欄 `[數位儀表] + [直向旅程卡]`，下方配置全寬 `PortraitActionBar`。<br>2. `DemoModeButton` 與底欄按鍵全面保證 $\ge 48\text{dp}$ 駕駛觸控高度。<br>3. 支援 320dp 窄螢幕與 `fontScale >= 1.3`。 | **RESOLVED**<br>`HudScreen.kt`, `TripSummaryBar.kt`, `DemoNoRouteBanner.kt` |
+| **H4** | **MEDIUM** | `DemoNoRouteBanner` 的車種按鈕 active 狀態判定錯誤（機車／重機永遠 false，汽車永遠 true）。 | 引入 `DemoModeSelection` 列舉與 `demoSelection` 衍生狀態；無路線時高亮「無路線」，模擬引導時依據 `vehicleType` 精確高亮汽車、機車或重機。 | **RESOLVED**<br>`DemoNoRouteBanner.kt`, `NavHudUiStateTest.kt` |
+| **H5** | **INTEGRATION** | 與 PR #7 共用檔案變更（`libs.versions.toml`, `android-ci.yml`）需整合驗證；APK 需有整合入口。 | 1. 訂定 PR #7 與 PR #8 合併 recipe，整合後 CI 需同時執行 `:core:model:test :core:navigation:test :ui:hud:test :app:assembleDebug`。<br>2. 本 PR 保持分離邊界，待 Stage 1 驗收階段再由協調 PR 串接 Activity。 | **DOCUMENTED**<br>`docs/STAGE1_HUD.md`, `.ai/CURRENT_TASK.md` |
+
+---
+
+## 3. Implemented Components
 
 | Component | File Path | Description & Compliance |
 |---|---|---|
@@ -34,47 +47,52 @@ This deliverable implements the mobile Garmin-like Head-Up Display (HUD) prototy
 | **Maneuver Icons** | `ui/hud/.../components/ManeuverIcon.kt` | Vector Canvas paths for high-glanceability turn arrows (Straight, Turn Left/Right, Keep Left/Right, U-Turn, Arrive). |
 | **Maneuver Header** | `ui/hud/.../components/ManeuverGuidanceHeader.kt` | Turn direction icon, large countdown distance readout (>= 36sp), instruction text, and distance progress countdown bar. |
 | **Speedometer Card** | `ui/hud/.../components/SpeedometerTelemetryCard.kt` | High-glanceability digital speed readout (>= 44sp), km/h label, Taiwan regulatory speed sign, and status badge. |
-| **Safety Alert Toast** | `ui/hud/.../components/SafetyAlertBanner.kt` | Sourced alert banner (Fixed Speed Camera, Section Speed Enforcement, Traffic Enforcement) with source attribution and distance. |
-| **Demo / No Route Notice** | `ui/hud/.../components/DemoNoRouteBanner.kt` | Stage 1 clear DEMO / NO ROUTE banner explaining prototype boundary, plus interactive quick-switch buttons for testing all 3 vehicle modes. |
-| **Trip Summary Bar** | `ui/hud/.../components/TripSummaryBar.kt` | Remaining distance, arrival ETA, duration, offline continuation indicator, vehicle type chip, and safety touch targets (>= 56dp x 56dp). |
-| **Adaptive Screen Layout** | `ui/hud/.../HudScreen.kt` | Automatically adapts to Landscape (3-column layout) and Portrait (vertical stacked layout). Contains 7 Compose `@Preview` fixtures. |
+| **Safety Alert Toast** | `ui/hud/.../components/SafetyAlertBanner.kt` | Sourced alert banner (Fixed Speed Camera, Section Speed Enforcement, Traffic Enforcement) with source attribution, distance, and mock disclaimer. |
+| **Demo / No Route Notice** | `ui/hud/.../components/DemoNoRouteBanner.kt` | Stage 1 clear DEMO / NO ROUTE banner explaining prototype boundary, plus interactive quick-switch buttons (>=48dp touch targets) for testing all 3 vehicle modes. |
+| **Landscape Trip Summary** | `ui/hud/.../components/TripSummaryBar.kt#TripSummaryBar` | Remaining distance, arrival ETA, duration, offline continuation indicator, vehicle type chip, and safety touch targets (>= 56dp x 56dp). |
+| **Portrait Trip Stats** | `ui/hud/.../components/TripSummaryBar.kt#PortraitTripStatsCard` | Dedicated vertical card for remaining distance, arrival ETA, and duration. Solves H3 horizontal squeezing. |
+| **Portrait Action Bar** | `ui/hud/.../components/TripSummaryBar.kt#PortraitActionBar` | Full-width bottom action row for vehicle mode switching, audio mute, and reset (>=48dp height). |
+| **Adaptive Screen Layout** | `ui/hud/.../HudScreen.kt` | Automatically adapts to Landscape (3-column layout) and Portrait (vertical stacked layout). Contains 9 Compose `@Preview` fixtures. |
 
 ---
 
-## 3. Supported Orientations & Vehicle Modes
+## 4. Supported Orientations & Vehicle Modes
 
-### 3.1 Orientations:
+### 4.1 Orientations:
 - **Landscape (Car Windshield / Dashboard Mount):**
-  - Top status bar: `[🚗 CAR] GPS: GOOD`
+  - Top status bar: `[🚗 CAR] GPS: 未連接 / 良好`
   - Left Column (~32%): Maneuver Card (`ManeuverGuidanceHeader`) + Demo control.
   - Center Column (~48%): Map Viewport Placeholder (Stage 1 architectural detachment).
   - Right Column (~20%): Speed & Alert Card (`SpeedometerTelemetryCard` + `SafetyAlertBanner`).
   - Bottom Bar: `TripSummaryBar` (Distance, ETA, Time, Vehicle Badge, Mute, Recenter).
 - **Portrait (Motorcycle Handlebar / Phone Car Mount):**
-  - Top status bar: `[🛵 SCOOTER] GPS: GOOD`
-  - Top: Maneuver Card (`ManeuverGuidanceHeader`).
+  - Top status bar: `[🛵 SCOOTER] GPS: 未連接 / 良好`
+  - Maneuver Card (`ManeuverGuidanceHeader`).
   - Alert / Demo Banner.
-  - Middle: Map Viewport Placeholder.
-  - Bottom: Speedometer Card (Left) + Trip Summary Bar (Right).
+  - Middle: Map Viewport Placeholder (`Modifier.weight(1f)`).
+  - Bottom Telemetry: `[數位儀表] + [直向旅程卡]`
+  - Bottom Actions: `PortraitActionBar` (`[🚗 汽車 (切換)]` + `[🔊]` + `[🔄]`).
 
-### 3.2 Vehicle Modes:
+### 4.2 Vehicle Modes:
 1. **`VehicleType.CAR` (小客車):** Configured for standard freeways, expressways, and urban navigation.
 2. **`VehicleType.SCOOTER` (普通機車):** Configured with two-stage left turn待轉 cues and motorcycle-specific guidance prompts.
 3. **`VehicleType.HEAVY_MOTORCYCLE` (大型重機):** Configured for expressway cruise speeds and legal route guidance.
 
 ---
 
-## 4. Verification & Testing
+## 5. Verification & Testing
 
-- **JVM Unit Tests (`ui/hud/src/test/kotlin/`):**
-  - `HudFormattersTest.kt`: Speed conversions (mps to km/h, null/NaN handling), distance rounding (<1000m and >=1000m), duration formatting, vehicle badges, overspeed logic.
-  - `NavHudUiStateTest.kt`: Validates default state is strictly unrouted (`isUnrouted = true`, `speedLimitKmh = null`, `currentSpeedKmh = 0`), validates Car/Scooter/Heavy Motorcycle demo fixtures.
-  - `HudVehicleModeTest.kt`: Exhaustive enum coverage and state immutability when toggling vehicle types.
-- **Compose Previews:**
+- **JVM Unit Tests (`ui/hud/src/test/kotlin/` — 17 `@Test` methods total):**
+  - `HudFormattersTest.kt` (10 tests): Speed conversions (mps to km/h, null/NaN handling), distance rounding (<1000m and >=1000m), duration formatting, vehicle badges, overspeed logic, and `formatGpsStatusLabel` (H1).
+  - `NavHudUiStateTest.kt` (5 tests): Validates default state is strictly unrouted (`isUnrouted = true`, `gpsStatus = UNKNOWN`, `speedLimitKmh = null`, `currentSpeedKmh = 0`), validates Car/Scooter/Heavy Motorcycle demo fixtures with mock alerts (H2), validates `demoSelection` (H4).
+  - `HudVehicleModeTest.kt` (2 tests): Exhaustive enum coverage and state immutability when toggling vehicle types.
+- **Compose Previews (9 total):**
   - `HudLandscapeCarPreview`
   - `HudLandscapeScooterPreview`
   - `HudLandscapeHeavyMotorcyclePreview`
-  - `HudPortraitCarPreview`
-  - `HudPortraitScooterPreview`
-  - `HudPortraitHeavyMotorcyclePreview`
-  - `HudNoRoutePreview`
+  - `HudPortraitCarPreview` (390x840)
+  - `HudPortraitScooterPreview` (390x840)
+  - `HudPortraitHeavyMotorcyclePreview` (390x840)
+  - `HudNoRoutePreview` (390x840)
+  - `HudPortraitNarrow320Preview` (320x640 narrow test)
+  - `HudPortraitLargeFontPreview` (390x840 with `fontScale = 1.3f`)
