@@ -33,7 +33,7 @@ The rules defined in this specification are grounded in the following official l
 3. **高速公路及快速公路交通管制規則 (Freeway and Expressway Traffic Control Regulations):**
    * **第 19 條:** Strictly prohibits pedestrians, mopeds, and motorcycles with displacement under 250cc (`SCOOTER`) from entering freeways and expressways. [全國法規資料庫](https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=K0040019&flno=19)
 4. **Authoritative Administrative Bulletins & Gazette Links:**
-   * **國道 3 號甲線開放公告:** 交通部臺灣區國道高速公路局 101 年 6 月 28 日管字第 1016005186 號公告（101 年 7 月 1 日起實施），開放 550cc 以上大型重機行駛國 3 甲台北聯絡道全線。 [交通部法規檢索系統](https://motclaw.motc.gov.tw/webMotcLaw2018/SLaw/Content?soid=4686)
+   * **國道 3 號甲線開放公告:** 交通部高速公路局及警政署通告，國 3 甲台北聯絡道比照快速公路，全線開放排氣量逾 250c.c. 大型重型機車（含 250-549cc 黃牌及 550cc 以上紅牌）行駛。 [高公局官方說明](https://www.freeway.gov.tw/Publish.aspx?cnid=193&p=358) / [國道公路警察局FAQ](https://www.hpb.npa.gov.tw/ch/app/faq/view?id=2606&module=faq&serno=A24717) / [交通部公報4686](https://motclaw.motc.gov.tw/webMotcLaw2018/SLaw/Content?soid=4686)
    * **快速公路大型重機行駛路段與限制一覽表:** 交通部公路局公告，詳細明列各快速公路開放與禁行里程。 [公路局公告表](https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790)
    * **國道禁止大型重機通行說明:** 交通部高速公路局國道行車管制通告。 [高公局官方說明](https://www.freeway.gov.tw/Publish.aspx?cnid=1778)
 
@@ -44,7 +44,7 @@ The rules defined in this specification are grounded in the following official l
 | Vehicle Code (`VehicleType`) | Legal Definition (Taiwan Regulation) | License Plate Color | National Freeways (國道) | Provincial Expressways (快速公路 台61~台88) | Urban Elevated Arterials (市區高架) | Fast-Traffic Inner Lanes (禁行機車道) |
 |---|---|---|---|---|---|---|
 | **`CAR`** | 自用小客車 / 小型車 | White (Black text) | **ALLOWED** | **ALLOWED** | **ALLOWED** | **ALLOWED** (Excludes Bus-Only lanes) |
-| **`HEAVY_MOTORCYCLE`** | 大型重型機車 (Displacement > 250cc) | Yellow (250–549cc) / Red (>=550cc) | **FORBIDDEN** (Exception: **Freeway 3A ONLY**) | **ALLOWED** (Exceptions: **Baguashan Tunnel 26.5k-32.6k**, **Taichung Ring 74 Dali-Wufeng 34k-39.2k FORBIDDEN**) | **ALLOWED** (Per municipal regulations) | **ALLOWED** (Treated as `CAR` per Rule 99-1) |
+| **`HEAVY_MOTORCYCLE`** | 大型重型機車 (Displacement > 250cc) | Yellow (250–549cc) / Red (>=550cc) | **FORBIDDEN** (Exception: **Freeway 3A ONLY, allows both Yellow and Red plates >250cc**) | **ALLOWED** (Exceptions: **Baguashan Tunnel 26.5k-32.6k**, **Taichung Ring 74 Caohu-Wufeng 34k-39.2k FORBIDDEN**) | **ALLOWED** (Per municipal regulations) | **ALLOWED** (Treated as `CAR` per Rule 99-1) |
 | **`SCOOTER`** | 普通重型/輕型機車 (Displacement <= 250cc) | White (<=250cc) / Green (<=50cc) | **FORBIDDEN** (Strict statutory ban) | **FORBIDDEN** (Strict statutory ban) | **FORBIDDEN** (Except dedicated motorcycle ramps) | **FORBIDDEN** (Must use slow/outer lane or 2-stage turn) |
 
 ---
@@ -55,7 +55,7 @@ The following table records specific Taiwan road segments that feature non-unifo
 
 | Segment Ref / Name | Route & Chainage | Direction | `CAR` | `HEAVY_MOTORCYCLE` | `SCOOTER` | Authority & Legal Basis | Official Direct Link | Verification Status | OSM Tagging Caveats |
 |---|---|---|---|---|---|---|---|---|---|
-| **`TW-SEG-01`**<br>國道三號甲線 (國3甲全線) | 台北端 (0k+000) 至 深坑端 (5k+600) | 双向 (Both) | **ALLOWED** | **ALLOWED** | **FORBIDDEN** | 高公局 101.06.28 管字第1016005186號公告<br>(101.07.01 實施) | [交通部公報詳細連結](https://motclaw.motc.gov.tw/webMotcLaw2018/SLaw/Content?soid=4686) | **VERIFIED** | `highway=motorway`, `ref=國3甲`, `motorcycle:conditional=yes @ (engine_capacity > 250)`. Missing conditional tag causes generic engines to ban heavy moto. |
+| **`TW-SEG-01`**<br>國道三號甲線 (國3甲全線) | 台北端 (0k+000) 至 深坑端 (5k+600) | 双向 (Both) | **ALLOWED** | **ALLOWED** (含黃牌與紅牌) | **FORBIDDEN** | 高公局國3甲管理通報<br>處罰條例第92條第2項 | [高公局國3甲大型重機通告](https://www.freeway.gov.tw/Publish.aspx?cnid=193&p=358)<br>[國警局FAQ](https://www.hpb.npa.gov.tw/ch/app/faq/view?id=2606&module=faq&serno=A24717) | **VERIFIED** | `highway=motorway`, `ref=國3甲`, `motorcycle:conditional=yes @ (engine_capacity > 250)`. 國3甲全線開放 250cc 以上大型重機（黃牌與紅牌皆允許）。 |
 | **`TW-SEG-02`**<br>國道一號主線 (汐五高架/主線) | 汐止至五股段 (11k 至 33k) | 双向 (Both) | **ALLOWED** | **FORBIDDEN** | **FORBIDDEN** | 高公局管制公告<br>處罰條例第33, 92條 | [高公局國道通告](https://www.freeway.gov.tw/Publish.aspx?cnid=1778)<br>[處罰條例第92條](https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=K0040012&flno=92) | **VERIFIED** | `highway=motorway`, `motorroad=yes`. Heavy moto strictly forbidden despite 92-2 enabling clause. |
 | **`TW-SEG-03`**<br>國道五號雪山長隧道 | 坪林交流道 (15k) 至 頭城交流道 (30k) | 双向 (Both) | **ALLOWED** | **FORBIDDEN** | **FORBIDDEN** | 高公局長隧道管制公告<br>高快速交管第19條 | [高公局長隧道管制](https://www.freeway.gov.tw/Publish.aspx?cnid=1778)<br>[高快速交管第19條](https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=K0040019&flno=19) | **VERIFIED** | `highway=motorway`, `tunnel=yes`. Strict prohibition. |
 | **`TW-SEG-04`**<br>台76線八卦山隧道及銜接段 | 林厝IC (26k+500) 至 中興系統 (32k+600) | 双向 (Both) | **ALLOWED** | **FORBIDDEN** | **FORBIDDEN** | 公路局快速公路限制一覽表<br>長隧道危險品與車種管制 | [公路局快速公路公告表](https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790) | **VERIFIED** | `highway=trunk`, `motorroad=yes`. Prohibited segment is 26.5k to 32.6k (6.1 km total). Engines must not infer access from expressway class. |
@@ -69,8 +69,8 @@ The following table records specific Taiwan road segments that feature non-unifo
 | **`TW-SEG-12`**<br>台61線西濱快速公路 | 八里至新竹、香山至曾文溪橋等通車段 | 双向 (Both) | **ALLOWED** | **ALLOWED** (依通車路段) | **FORBIDDEN** | 公路局快速公路限制一覽表<br>處罰條例第92條 | [公路局快速公路公告表](https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790) | **VERIFIED** | `highway=trunk`, `motorroad=yes`. **Caveat:** 香山平面交織段、八里台北港端、鳳鼻尾隧道銜接路段非封閉高架，須按現地標誌管制，不得全線泛化。 |
 | **`TW-SEG-13`**<br>新北環河快速道路主線 | 三重龍門路 至 新店安祥路 | 双向 (Both) | **ALLOWED** | **ALLOWED** | **FORBIDDEN** | 新北市政府交通局高架管制規約 | [新北市政府公告](https://www.traffic.ntpc.gov.tw/) | **RECHECK_REQUIRED** | `highway=trunk`, `motorcycle=no`. Scooters must use the grade-separated parallel scooter viaducts. |
 | **`TW-SEG-14`**<br>台北市新生高架道路 | 濟南路引道 至 通河街圓山引道 | 双向 (Both) | **ALLOWED** | **ALLOWED** | **FORBIDDEN** | 台北市政府交通局高架管制規約 | [台北市道路交通管制規定](https://www-ws.gov.taipei/) | **RECHECK_REQUIRED** | `highway=primary`, `motorroad=yes`. Heavy moto allowed, ordinary scooter banned. |
-| **`TW-SEG-15A`**<br>台74線快官至大里二段 | 快官 (0k+000) 至 大里二交流道 (34k+000) | 双向 (Both) | **ALLOWED** | **ALLOWED** | **FORBIDDEN** | 公路局快速公路限制一覽表<br>處罰條例第92條第2項 | [公路局快速公路公告表](https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790) | **VERIFIED** | `highway=trunk`, `motorroad=yes`. Main urban ring expressway of Taichung. |
-| **`TW-SEG-15B`**<br>台74線大里二至霧峰端 | 大里二交流道 (34k+000) 至 霧峰端 (39k+235) | 双向 (Both) | **ALLOWED** | **FORBIDDEN** | **FORBIDDEN** | 公路局快速公路限制一覽表<br>銜接國道3號高架路段管制 | [公路局快速公路公告表](https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790) | **VERIFIED** | `highway=trunk`. **Strict prohibition:** Heavy motorcycle prohibited between 34k+000 and 39k+235. Engine must prune this segment! |
+| **`TW-SEG-15A`**<br>台74線快官至草湖交流道段 | 快官交流道 (0k+000) 至 草湖交流道 (34k+000) | 双向 (Both) | **ALLOWED** | **ALLOWED** | **FORBIDDEN** | 公路局快速公路限制一覽表<br>處罰條例第92條第2項 | [公路局快速公路公告表](https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790) | **VERIFIED** | `highway=trunk`, `motorroad=yes`. Main urban ring expressway of Taichung. |
+| **`TW-SEG-15B`**<br>台74線草湖交流道至霧峰交流道段 | 草湖交流道 (34k+000) 至 霧峰端 (39k+235) | 双向 (Both) | **ALLOWED** | **FORBIDDEN** | **FORBIDDEN** | 公路局快速公路限制一覽表<br>銜接國道3號高架路段管制 | [公路局快速公路公告表](https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790) | **VERIFIED** | `highway=trunk`. **Strict prohibition:** Heavy motorcycle prohibited between 34k+000 and 39k+235. 工程里程說明：大里二交流道位於 32k+854，草湖交流道位於 34k+000，兩者不同。參考：[公路局中分局樁號](https://thbu2.thb.gov.tw/cp.aspx?n=12995)。 |
 | **`TW-SEG-16`**<br>台北車站忠孝西路一段 | 重慶南路口 至 中山南北路口 | 双向 (Both) | **ALLOWED** | **ALLOWED** | **FORBIDDEN** (23:00~06:00 開放) | 台北市政府交通局道路管制公告 | [台北市交工處公告](https://www.bote.gov.taipei/) | **RECHECK_REQUIRED** | Time-conditional access: `motorcycle:conditional=no @ (06:00-23:00)`. Daytime scooter access banned since 1978. |
 
 ---
@@ -95,7 +95,7 @@ In global OpenStreetMap standards:
    Way query: `highway=motorway` AND `ref="國3甲"`.
 2. **Hard Blacklists (Heavy Moto Restrictions on Expressways):**
    * **Baguashan Tunnel Segment:** Way IDs on Provincial Highway 76 from `26k+500` to `32k+600` MUST be explicitly blacklisted.
-   * **Taichung Ring 74 East Section:** Way IDs on Provincial Highway 74 from `34k+000` to `39k+235` (Dali-2 IC to Wufeng end) MUST be explicitly blacklisted.
+   * **Taichung Ring 74 East Section:** Way IDs on Provincial Highway 74 from `34k+000` to `39k+235` (Caohu IC to Wufeng end) MUST be explicitly blacklisted.
 3. **Scooter Bridge Separation:**
    Bridge relations must map `dedicated_cycleway_scooter` ways as traversable and primary bridge ways as forbidden for `SCOOTER`.
 

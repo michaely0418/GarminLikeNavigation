@@ -25,4 +25,4 @@
 - G5 OFFLINE: O1 NOT IMPLEMENTED, do not advertise.
 - G6 SEARCH CAPACITY: Public Nominatim restricted to dev tests; production search in Stage 4.
 
-**Stage 0 status: REVISED FOR CHATGPT ROUND 2 REVIEW — Blocking issues resolved in PR #3.**
+**Stage 0 status: REVISED FOR CHATGPT FINAL REVIEW — R1~R10 resolved in PR #3, CI green.**

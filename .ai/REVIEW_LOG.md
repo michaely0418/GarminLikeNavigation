@@ -1,11 +1,11 @@
 # Cross-AI Review Log — Stage 0 Scaffold & Benchmark Review
 
-**Document Version:** 1.1.0  
+**Document Version:** 1.2.0  
 **Initial Review Date:** 2026-10-14  
-**Revision Date:** 2026-10-14 (Responding to ChatGPT PR #3 First-Round Review)  
+**Revision Date:** 2026-10-14 (Addressing ChatGPT PR #3 Round 2 Review R9 & R10)  
 **Authors / Reviewers:** Gemini (Stage 0 Deliverables Owner) & ChatGPT (Scaffold Owner & Reviewer)  
 **Current PR:** [#3 (Target: `develop`)](https://github.com/michaely0418/GarminLikeNavigation/pull/3)  
-**Status:** **REVISED / PENDING CHATGPT SECOND-ROUND ACCEPTANCE**
+**Status:** **REVISED / PENDING CHATGPT FINAL ACCEPTANCE**
 
 ---
 
@@ -32,6 +32,8 @@ To avoid overclaiming test maturity and ensure safety-critical navigation accura
 | **R6** | 驗證與驗收語意修正 | **BLOCKING** | `validate_benchmarks.py` 通過僅代表 JSON Schema 與案例數量有效，不能聲稱為完整驗證通過。需修正「16 verified」「G2 BASELINE READY」等過度宣稱。 | 1. 全面修正文件與記錄，改用 `schema_validated` (18 cases PASS)、`source_verified`（僅限已核對公報之案例）。<br>2. 明確標示 `routing_executed = NOT RUN`、`road_tested = NOT RUN`。<br>3. G2 狀態更正為 `IN PROGRESS (Specification Baseline & Curated Benchmark Draft)`。 | **RESOLVED**<br>`README.md`, `REVIEW_LOG.md`, `STAGE0_CHECKLIST.md` |
 | **R7** | `mustTraverseSegments` 人工草稿狀態 | **BLOCKING** | 使用 `ROAD_NAME_HINT` 或 `TW-SEG-xx` 屬於人工草稿，在未建立 OSM Way ID 映射前不能當成可執行自動斷言。 | 在 `tests/routing-cases/README.md` 及 Benchmark 各案例之 `comments` 明確標註 `draft/manual` 狀態，並訂定 Stage 2 綁定 `OSM_WAY_ID` 與 `GEOMETRY_CORRIDOR` 之工作邊界。 | **RESOLVED**<br>`tests/routing-cases/README.md` |
 | **R8** | CI Workflow Runner 修復 | **CI / BUILD** | PR #3 沿用舊版 workflow 會在 `setup-android@v3` 失敗。PR #2 已在 `develop` 修正 Android SDK 管理路徑。 | 將 `origin/develop`（commit `c4cc59b`）合併至本分支，帶入最新 `.github/workflows/android-ci.yml` 修復。 | **RESOLVED**<br>Merge commit `419b479` |
+| **R9** | `TW-SEG-01` / `VEHICLE_RULES.md` & `TW-TC-01` | **HIGH / FIX REQUIRED** | 國3甲大型重機排氣量門檻誤植為「開放 550cc 以上」。高公局與國警局明確公告國3甲比照快速公路，全線開放排氣量逾 250c.c. 大型重型機車（含黃牌與紅牌）。 | 1. 更正 `VEHICLE_RULES.md` 國3甲門檻為 250c.c. 以上（含黃牌），補充高公局與國道警局FAQ連結。<br>2. `TW-TC-01` 新增 `vehicleAttributes: { engineDisplacementCc: 300, plateColor: "YELLOW" }` 屬性，確保引擎不排除黃牌。 | **RESOLVED**<br>[高公局國3甲通報](https://www.freeway.gov.tw/Publish.aspx?cnid=193&p=358)<br>[國道公路警察局FAQ](https://www.hpb.npa.gov.tw/ch/app/faq/view?id=2606&module=faq&serno=A24717) |
+| **R10** | `TW-SEG-15` / `VEHICLE_RULES.md` & `TW-TC-17/18` | **HIGH / FIX REQUIRED** | 台74線 34K 分界為「草湖交流道」，非「大里二交流道」。大里二交流道位於主線 32K+854，草湖交流道位於 34K+000。 | 1. `VEHICLE_RULES.md` 正名 `TW-SEG-15A`（快官至草湖 0k-34k）與 `TW-SEG-15B`（草湖至霧峰 34k-39.2k），附上工程樁號佐證。<br>2. 更新 `TW-TC-17` 與 `TW-TC-18` 案例文案、草湖交流道經緯度座標與命名。 | **RESOLVED**<br>[公路局快速公路公告表](https://www.thb.gov.tw/News_ExpresswaySection.aspx?n=462&sms=13790)<br>[公路局工程樁號](https://thbu2.thb.gov.tw/cp.aspx?n=12995) |
 
 ---
 

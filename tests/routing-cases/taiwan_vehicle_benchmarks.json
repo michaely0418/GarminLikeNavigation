@@ -4,17 +4,27 @@
   "cases": [
     {
       "caseId": "TW-TC-01",
-      "title": "國道三號甲線 (國3甲) 大型重型機車合法通行驗證",
-      "description": "驗證大型重機行駛國道三號甲線（台北端至深坑端），依高公局 101.06.28 公告全線合法開放通行。",
+      "title": "國道三號甲線 (國3甲) 大型重型機車 (含250cc以上黃牌與紅牌) 合法通行驗證",
+      "description": "驗證 250cc 以上大型重型機車（含 250-549cc 黃牌及 550cc 以上紅牌）行駛國道三號甲線台北聯絡道全線，依法合法開放通行。",
       "legalReference": [
         {
-          "authority": "交通部臺灣區國道高速公路局",
-          "documentTitle": "交通部臺灣區國道高速公路局 101 年 6 月 28 日管字第 1016005186 號公告",
-          "url": "https://motclaw.motc.gov.tw/webMotcLaw2018/SLaw/Content?soid=4686",
-          "publishedAt": "2012-06-28",
+          "authority": "交通部高速公路局",
+          "documentTitle": "交通部高速公路局國道3號甲線大型重型機車行駛管理規定",
+          "url": "https://www.freeway.gov.tw/Publish.aspx?cnid=193&p=358",
+          "publishedAt": "2012-07-01",
           "effectiveAt": "2012-07-01",
           "verifiedAt": "2026-10-14",
-          "section": "自101年7月1日零時起開放550c.c.以上大型重型機車行駛國道3號甲線台北聯絡道全線",
+          "section": "國道3號甲線比照快速公路，開放排氣量逾250c.c.以上大型重型機車（含黃牌與紅牌）行駛",
+          "verificationStatus": "VERIFIED"
+        },
+        {
+          "authority": "內政部警政署國道公路警察局",
+          "documentTitle": "國道公路警察局大型重型機車行駛國道相關規定與FAQ",
+          "url": "https://www.hpb.npa.gov.tw/ch/app/faq/view?id=2606&module=faq&serno=A24717",
+          "publishedAt": "2012-07-01",
+          "effectiveAt": "2012-07-01",
+          "verifiedAt": "2026-10-14",
+          "section": "國道3號甲線全線開放排氣量逾250c.c.之大型重型機車行駛",
           "verificationStatus": "VERIFIED"
         }
       ],
@@ -30,6 +40,11 @@
       },
       "waypoints": [],
       "vehicleType": "HEAVY_MOTORCYCLE",
+      "vehicleAttributes": {
+        "engineDisplacementCc": 300,
+        "plateColor": "YELLOW",
+        "isHeavyMotorcycle": true
+      },
       "expectedOutcome": {
         "mustForbidSegments": [],
         "mustAllowSegments": [
@@ -37,7 +52,7 @@
             "segmentRef": "TW-SEG-01",
             "direction": "EASTBOUND",
             "sourceType": "OFFICIAL_SEGMENT_ID",
-            "notes": "國3甲全線高架主線 (草案標籤，Stage 2 需綁定 OSM Way ID)"
+            "notes": "國3甲全線高架主線 (開放逾250cc黃牌/紅牌，Stage 2 需綁定 OSM Way ID)"
           }
         ],
         "mustTraverseSegments": [
@@ -49,7 +64,7 @@
         ],
         "expectedWarningOnUnknownData": false,
         "legalExpectation": "ALLOWED",
-        "comments": "國3甲為目前唯一法定常態性開放大型重型機車之國道路段。Stage 0 為規範級草稿，待 Stage 2 綁定 OSM way ID。"
+        "comments": "國道3號甲線（台北聯絡道）法定屬國道快速公路性質，全線開放排氣量逾250c.c.之大型重型機車（黃牌與紅牌皆允許）。本案例配置300cc黃牌屬性進行雙重驗證，防止算路引擎錯誤排除黃牌。"
       }
     },
     {
@@ -819,8 +834,8 @@
     },
     {
       "caseId": "TW-TC-17",
-      "title": "台74線快速公路 大里二至霧峰端 大型重機禁止通行",
-      "description": "驗證大型重機行駛台74線快速公路大里二至霧峰端（34k+000至39k+235），依公路局公告該銜接國道3號高架段禁止大型重機通行，算路引擎必須強制剔除。",
+      "title": "台74線快速公路 草湖交流道至霧峰交流道段 大型重機禁止通行",
+      "description": "驗證大型重機行駛台74線快速公路草湖交流道至霧峰交流道（34k+000至39k+235），依公路局公告該銜接國道3號高架段禁止大型重機通行，算路引擎必須強制剔除。",
       "legalReference": [
         {
           "authority": "交通部公路局",
@@ -829,19 +844,19 @@
           "publishedAt": "2012-07-01",
           "effectiveAt": "2012-07-01",
           "verifiedAt": "2026-10-14",
-          "section": "台74線34k+000至39k+235段（大里二交流道至霧峰端）禁止大型重型機車通行",
+          "section": "台74線34k+000至39k+235段（草湖交流道至霧峰交流道）禁止大型重型機車通行",
           "verificationStatus": "VERIFIED"
         }
       ],
       "origin": {
-        "lat": 24.098,
-        "lng": 120.701,
-        "name": "台74線大里二交流道匝道入口"
+        "lat": 24.0845,
+        "lng": 120.7025,
+        "name": "台74線草湖交流道南向匝道 (34k+000)"
       },
       "destination": {
         "lat": 24.062,
         "lng": 120.697,
-        "name": "台74線霧峰端/銜接國道3號系統"
+        "name": "台74線霧峰交流道端/銜接國道3號系統 (39k+235)"
       },
       "waypoints": [],
       "vehicleType": "HEAVY_MOTORCYCLE",
@@ -851,20 +866,20 @@
             "segmentRef": "TW-SEG-15B",
             "direction": "SOUTHBOUND",
             "sourceType": "OFFICIAL_SEGMENT_ID",
-            "notes": "台74線大里二至霧峰端 (34k+000~39k+235)"
+            "notes": "台74線草湖交流道至霧峰交流道 (34k+000~39k+235)"
           }
         ],
         "mustAllowSegments": [],
         "mustTraverseSegments": [],
         "expectedWarningOnUnknownData": false,
         "legalExpectation": "FORBIDDEN",
-        "comments": "台74線快官至大里二開放，但大里二至霧峰端依法禁止大型重機，算路引擎絕不可因同一道路編號而全線放行。"
+        "comments": "台74線快官至草湖交流道（0k-34k）開放，但草湖交流道至霧峰交流道（34k-39k+235）依法禁止大型重機。注意：大里二交流道位於32k+854，草湖交流道位於34k+000，兩者不同。"
       }
     },
     {
       "caseId": "TW-TC-18",
-      "title": "台74線快速公路 快官至大里二段 大型重機合法通行",
-      "description": "驗證大型重機行駛台74線台中環線快官至大里二交流道（0k+000至34k+000），全線主線高架合法通行。",
+      "title": "台74線快速公路 快官交流道至草湖交流道段 大型重機合法通行",
+      "description": "驗證大型重機行駛台74線台中環線快官交流道至草湖交流道（0k+000至34k+000），全線主線高架合法通行。",
       "legalReference": [
         {
           "authority": "交通部公路局",
@@ -873,19 +888,19 @@
           "publishedAt": "2012-07-01",
           "effectiveAt": "2012-07-01",
           "verifiedAt": "2026-10-14",
-          "section": "台74線0k+000至34k+000段開放大型重型機車通行",
+          "section": "台74線0k+000至34k+000段（快官交流道至草湖交流道）開放大型重型機車通行",
           "verificationStatus": "VERIFIED"
         }
       ],
       "origin": {
         "lat": 24.112,
         "lng": 120.598,
-        "name": "台74線快官交流道入口"
+        "name": "台74線快官交流道入口 (0k+000)"
       },
       "destination": {
-        "lat": 24.098,
-        "lng": 120.701,
-        "name": "台74線大里二交流道出口"
+        "lat": 24.0845,
+        "lng": 120.7025,
+        "name": "台74線草湖交流道出口 (34k+000)"
       },
       "waypoints": [],
       "vehicleType": "HEAVY_MOTORCYCLE",
@@ -896,7 +911,7 @@
             "segmentRef": "TW-SEG-15A",
             "direction": "EASTBOUND",
             "sourceType": "OFFICIAL_SEGMENT_ID",
-            "notes": "台74線快官至大里二段主線"
+            "notes": "台74線快官交流道至草湖交流道段主線"
           }
         ],
         "mustTraverseSegments": [
@@ -908,7 +923,7 @@
         ],
         "expectedWarningOnUnknownData": false,
         "legalExpectation": "ALLOWED",
-        "comments": "台74線0k至34k為公路局法定開放大型重機行駛之快速公路高架段。"
+        "comments": "台74線0k+000至34k+000（快官至草湖交流道）為公路局法定開放大型重機行駛之快速公路高架段。"
       }
     }
   ]

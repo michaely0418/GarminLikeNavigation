@@ -1,7 +1,7 @@
 # Current task
 
 - Stage: 0 — repo & six-contract alignment
-- Status: GEMINI ROUND 2 REVISION SUBMITTED / AWAITING CHATGPT RE-REVIEW
+- Status: GEMINI FINAL REVISION (R9/R10 RESOLVED) / AWAITING CHATGPT FINAL ACCEPTANCE
 - Feature branch: `feature/stage0-gemini-deliverables`
 - Issue: `STAGE0-001`
 - Owners: ChatGPT scaffold; Gemini policy/legal/HUD/benchmark
