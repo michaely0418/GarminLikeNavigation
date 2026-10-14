@@ -89,3 +89,14 @@ Repository Owner 已在 GitHub Actions 設定兩個必要 Secrets。為避免洩
 - 實際在手機直接覆蓋安裝、設定保存：由 Product Owner 完成；首次從舊簽章切換仍須移除舊版一次。
 
 **判定原則：** 只有檢查到兩個不同 Run 的實際簽章憑證一致、APK 版本遞增，才將 CI 簽章與版本控管標示為 PASS；建置成功本身並不能證明手機能覆蓋更新。
+
+### 實機覆蓋更新驗收 — PASS（2026-10-14）
+
+Product Owner 在 Xiaomi Android 手機上依照下列流程測試並回覆「測試正常」：
+
+- 使用 GitHub Actions [Run #38584551230](https://github.com/michaely0418/GarminLikeNavigation/actions/runs/38584551230) 的穩定簽章 Debug APK（`versionCode=10030`）。
+- 使用 [Run #38584965844](https://github.com/michaely0418/GarminLikeNavigation/actions/runs/38584965844) 的同簽章 APK（`versionCode=10031`）直接覆蓋安裝，**無須再次卸載**：**PASS（使用者回報）**。
+- 覆蓋後車種及日夜模式設定仍保留：**PASS（使用者回報）**。
+- 兩 Run 的 APK 憑證 SHA-256 完全相同（`dcfa4ade7aad8b6ccb2c03eeeabeb55f28992abdc1bf31c7792df09e47c2e214`）：**PASS（CI 日誌）**。
+
+**INSTALL-UPDATE-01 結案。** 此項為內部測試 Debug 簽章方案，不等同 Google Play 正式發布簽章或更新管道；請妥善備份固定 PKCS12 測試私鑰與密碼。Stage 1 的地圖/HUD 其他功能驗收仍需另行追蹤。
