@@ -1,4 +1,4 @@
 package app.garminlike.nav.ui.hud
 
-/** Stage 0 scaffold only; real behavior is assigned by module ownership. */
-object HudModuleStatus { const val IMPLEMENTED = false }
+/** Stage 1 mobile Compose HUD prototype available; supports 3 vehicle types and portrait/landscape. */
+object HudModuleStatus { const val IMPLEMENTED = true }

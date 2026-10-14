@@ -1,4 +1,4 @@
 package app.garminlike.nav.ui.map
 
-/** Stage 0 scaffold only; real behavior is assigned by module ownership. */
-object MapModuleStatus { const val IMPLEMENTED = false }
+/** Stage 1 live MapLibre demonstration available; NOT full offline navigation. */
+object MapModuleStatus { const val IMPLEMENTED = true }
