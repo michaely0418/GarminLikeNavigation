@@ -1,11 +1,15 @@
 # Current task
 
-- Stage: 0 — repo & six-contract alignment
-- Status: GEMINI FINAL REVISION (R9/R10 RESOLVED) / AWAITING CHATGPT FINAL ACCEPTANCE
-- Feature branch: `feature/stage0-gemini-deliverables`
-- Issue: `STAGE0-001`
-- Owners: ChatGPT scaffold; Gemini policy/legal/HUD/benchmark
-- Files delivered by Gemini: `docs/API_POLICY.md`, `docs/VEHICLE_RULES.md`, `docs/HUD_WIREFRAME.md`, `tests/routing-cases/taiwan_vehicle_benchmarks.json`, `.ai/REVIEW_LOG.md`
-- Acceptance: successful real Gradle build, tests/CI logs, >=15 documented benchmark drafts (18 provided), licensed search plan, official legal source mapping, HUD, peer review
-- Out of scope: feature-complete GPS/map/routing/Android Auto, API key use, production release
-- Forbidden: broad rewrites of shared interfaces or edits to `main` without review; claims of verified GPS/legality/Google licensing without evidence
+- Stage: 0 closeout / Stage 1 planning
+- Status: Stage 0 scaffold & Gemini specs ACCEPTED; Stage 1 implementation **NOT STARTED**
+- Integration branch: `develop`
+- Closeout branch: `chore/stage0-closeout`
+- Stage 0 tracking: [Issue #1](https://github.com/michaely0418/GarminLikeNavigation/issues/1), [PR #3](https://github.com/michaely0418/GarminLikeNavigation/pull/3) (MERGED)
+- Next task: [Issue #4 — MapLibre map, GPS location and CAR/SCOOTER/HEAVY_MOTORCYCLE selector](https://github.com/michaely0418/GarminLikeNavigation/issues/4)
+- Owners: ChatGPT — core app/map/location; Gemini — phone HUD/UX/review; Product Owner — device acceptance
+- Stage 1 feature branches (to create when starting implementation): `feature/stage1-map-location` and `feature/stage1-hud`
+- Stage 0 acceptance: 11 modules + 6 interfaces, CI tests/assembleDebug & artifact, 18 schema-valid drafts and policy/HUD specs, R1–R10 review
+- G1: BLOCKED (Google Places vs non-Google map); G2: IN PROGRESS (Taiwan segment legality / GIS mapping)
+- Not proven: routing execution, legal route coverage, field road tests, full offline rerouting, Android Auto, production Google search compliance
+- Next decision: finish Stage 0 closeout PR and then obtain implementation go-ahead for Issue #4
+- Avoid: writing to `main` directly, co-editing shared modules without coordinating, claiming legal validity from JSON validation, committing API credentials
