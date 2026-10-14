@@ -79,3 +79,13 @@ CI 的「Report signed APK identity」步驟會印出 `versionCode` 及公開 SH
 - [ ] 兩次不同 GitHub Run 的憑證 SHA-256 指紋相同
 - [ ] 第二次 Run 的 `versionCode` 大於第一次
 - [ ] 第二次安裝**不需解除安裝**，且保留手機上的車種／日夜設定
+
+## 固定簽章 CI 驗收紀錄（2026-10-14）
+
+Repository Owner 已在 GitHub Actions 設定兩個必要 Secrets。為避免洩漏私鑰與密碼，驗收時**只記錄 CI 公開的 APK versionCode 與簽章憑證 SHA-256 指紋**，不輸出 Base64 或 keystore 密碼。
+
+- 第一次啟用後 CI（待驗證）：預期 Artifact `navigation-stable-test-apk`。
+- 第二次獨立 CI（待驗證）：憑證指紋應與第一次相同，且 versionCode 嚴格遞增。
+- 實際在手機直接覆蓋安裝、設定保存：由 Product Owner 完成；首次從舊簽章切換仍須移除舊版一次。
+
+**判定原則：** 只有檢查到兩個不同 Run 的實際簽章憑證一致、APK 版本遞增，才將 CI 簽章與版本控管標示為 PASS；建置成功本身並不能證明手機能覆蓋更新。
