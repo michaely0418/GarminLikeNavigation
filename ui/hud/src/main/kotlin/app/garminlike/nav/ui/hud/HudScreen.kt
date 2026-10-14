@@ -420,13 +420,17 @@ private fun cycleVehicleType(current: VehicleType): VehicleType = when (current)
  * Interactive preview wrapper supporting real-time demo switching.
  */
 @Composable
-fun InteractiveHudDemo(initialState: NavHudUiState = NavHudUiState.demoInitial()) {
+fun InteractiveHudDemo(
+    initialState: NavHudUiState = NavHudUiState.demoInitial(),
+    onVehicleTypeChanged: (VehicleType) -> Unit = {}
+) {
     var state by remember { mutableStateOf(initialState) }
 
     HudScreen(
         state = state,
         onVehicleTypeChange = { newType ->
             state = state.copy(vehicleType = newType)
+            onVehicleTypeChanged(newType)
         },
         onToggleMute = {
             state = state.copy(isMuted = !state.isMuted)
@@ -436,6 +440,7 @@ fun InteractiveHudDemo(initialState: NavHudUiState = NavHudUiState.demoInitial()
         },
         onSelectDemoState = { newState ->
             state = newState
+            onVehicleTypeChanged(newState.vehicleType)
         }
     )
 }
