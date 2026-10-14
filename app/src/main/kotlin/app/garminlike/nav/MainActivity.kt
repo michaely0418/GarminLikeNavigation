@@ -11,9 +11,11 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -43,15 +45,33 @@ class MainActivity : Activity() {
     private lateinit var modeState: VehicleModeState
     private var nightMode = false
     private var subscriptionsStarted = false
+    private var lastDisplayedLocation: Location? = null
 
     private val listener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
+            if (!location.latitude.isFinite() || !location.longitude.isFinite()) return
             if (location.latitude !in -90.0..90.0 || location.longitude !in -180.0..180.0) return
+            // GPS and network providers can report alternately. Do not replace a fresh,
+            // substantially more accurate fix with a coarse 100m network position.
+            val previous = lastDisplayedLocation
+            val previousIsFresh = previous != null &&
+                (System.currentTimeMillis() - previous.time) in 0L..15_000L
+            if (previousIsFresh && previous != null && previous.hasAccuracy() &&
+                location.hasAccuracy() && previous.accuracy + 15f < location.accuracy) return
+
+            lastDisplayedLocation = Location(location)
             val point = GeoPoint(location.latitude, location.longitude)
             mapWidget.showLocation(point)
+            val source = when {
+                location.provider == LocationManager.GPS_PROVIDER -> "GPS"
+                !hasFineLocationPermission() -> "概略定位"
+                else -> "網路定位"
+            }
             val accuracy = if (location.hasAccuracy()) " / ±" + location.accuracy.toInt() + "m" else ""
+            val hint = if (location.hasAccuracy() && location.accuracy >= 50f) "（精度有限）" else ""
             gpsStatus.text = String.format(
-                Locale.TAIWAN, "GPS %.5f, %.5f%s", point.latitudeDeg, point.longitudeDeg, accuracy
+                Locale.TAIWAN, "%s %.5f, %.5f%s%s",
+                source, point.latitudeDeg, point.longitudeDeg, accuracy, hint
             )
         }
 
@@ -78,6 +98,23 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.rgb(20, 27, 37))
+            // Android 15 with targetSdk 35 enforces edge-to-edge by default.
+            // Keep the title and map controls outside status/navigation bars.
+            setOnApplyWindowInsetsListener { view, insets ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    val safe = insets.getInsets(
+                        WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+                    )
+                    view.setPadding(safe.left, safe.top, safe.right, safe.bottom)
+                } else {
+                    @Suppress("DEPRECATION")
+                    view.setPadding(
+                        insets.systemWindowInsetLeft, insets.systemWindowInsetTop,
+                        insets.systemWindowInsetRight, insets.systemWindowInsetBottom
+                    )
+                }
+                insets
+            }
         }
         root.addView(label("Garmin-like Navigation   •   Stage 1", 19f).apply {
             setPadding(dp(16), dp(10), dp(8), dp(2))
@@ -199,6 +236,9 @@ class MainActivity : Activity() {
             textSize = 14f
             isAllCaps = false
             setTextColor(Color.WHITE)
+            // Theme.Material.Light's default button is light grey: white text on
+            // it is effectively invisible. Force an accessible dark action tint.
+            backgroundTintList = ColorStateList.valueOf(Color.rgb(43, 68, 95))
             setOnClickListener { click() }
         }
 
