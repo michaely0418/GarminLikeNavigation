@@ -9,6 +9,8 @@ import android.graphics.Color
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup
@@ -35,6 +37,7 @@ class MainActivity : Activity() {
     private val locationManager by lazy { getSystemService(Context.LOCATION_SERVICE) as LocationManager }
     private lateinit var mapWidget: NavigationMapView
     private lateinit var gpsStatus: TextView
+    private lateinit var connectivityStatus: TextView
     private lateinit var themeButton: Button
     private val modeButtons = mutableMapOf<VehicleType, Button>()
     private lateinit var modeState: VehicleModeState
@@ -92,6 +95,11 @@ class MainActivity : Activity() {
             setPadding(dp(14), dp(6), dp(14), dp(6))
         }
         root.addView(gpsStatus)
+        connectivityStatus = label("正在檢查網路狀態", 12f).apply {
+            setTextColor(Color.rgb(219, 210, 175))
+            setPadding(dp(14), 0, dp(14), dp(4))
+        }
+        root.addView(connectivityStatus)
         root.addView(label("圖資：OpenFreeMap / OpenStreetMap • 需網路 • 僅供測試", 11f).apply {
             setTextColor(Color.LTGRAY)
             setPadding(dp(14), 0, dp(14), dp(9))
@@ -99,6 +107,7 @@ class MainActivity : Activity() {
         setContentView(root)
         mapWidget.onCreate(savedInstanceState)
         updateVehicleButtons()
+        updateConnectivityStatus()
 
         if (!hasAnyLocationPermission() && !preferences.getBoolean(PROMPTED_KEY, false)) {
             preferences.edit().putBoolean(PROMPTED_KEY, true).apply()
@@ -274,8 +283,18 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun updateConnectivityStatus() {
+        val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capability = manager.getNetworkCapabilities(manager.activeNetwork)
+        connectivityStatus.text = if (capability?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true) {
+            "網路已連線；若地圖空白，請檢查圖資服務"
+        } else {
+            "離線：目前無可用網路，線上底圖可能無法載入"
+        }
+    }
+
     override fun onStart() { super.onStart(); mapWidget.onStart() }
-    override fun onResume() { super.onResume(); mapWidget.onResume(); startLocationUpdates() }
+    override fun onResume() { super.onResume(); mapWidget.onResume(); updateConnectivityStatus(); startLocationUpdates() }
     override fun onPause() { stopLocationUpdates(); mapWidget.onPause(); super.onPause() }
     override fun onStop() { mapWidget.onStop(); super.onStop() }
     override fun onLowMemory() { super.onLowMemory(); mapWidget.onLowMemory() }
