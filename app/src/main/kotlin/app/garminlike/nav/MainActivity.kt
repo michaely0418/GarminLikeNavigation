@@ -22,6 +22,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import app.garminlike.nav.core.model.GeoPoint
 import app.garminlike.nav.core.model.VehicleType
+import app.garminlike.nav.core.navigation.LocationFixPolicy
+import app.garminlike.nav.core.navigation.LocationFixQuality
 import app.garminlike.nav.core.navigation.VehicleModeState
 import app.garminlike.nav.ui.map.NavigationMapView
 import java.util.Locale
@@ -52,13 +54,23 @@ class MainActivity : Activity() {
         override fun onLocationChanged(location: Location) {
             if (!location.latitude.isFinite() || !location.longitude.isFinite()) return
             if (location.latitude !in -90.0..90.0 || location.longitude !in -180.0..180.0) return
-            // GPS and network providers can report alternately. Do not replace a fresh,
-            // substantially more accurate fix with a coarse 100m network position.
-            val previous = lastDisplayedLocation
-            val previousIsFresh = previous != null &&
-                (System.currentTimeMillis() - previous.time) in 0L..15_000L
-            if (previousIsFresh && previous != null && previous.hasAccuracy() &&
-                location.hasAccuracy() && previous.accuracy + 15f < location.accuracy) return
+            // Network and GPS callbacks can arrive out of order. Prefer the
+            // monotonic fix timestamp; keep the earlier accuracy safeguard.
+            val previousQuality = lastDisplayedLocation?.let {
+                LocationFixQuality(
+                    fixTimeMillis = it.time,
+                    elapsedRealtimeNanos = it.elapsedRealtimeNanos,
+                    accuracyMeters = if (it.hasAccuracy()) it.accuracy else null
+                )
+            }
+            val incomingQuality = LocationFixQuality(
+                fixTimeMillis = location.time,
+                elapsedRealtimeNanos = location.elapsedRealtimeNanos,
+                accuracyMeters = if (location.hasAccuracy()) location.accuracy else null
+            )
+            if (!LocationFixPolicy.shouldAccept(previousQuality, incomingQuality, System.currentTimeMillis())) {
+                return
+            }
 
             lastDisplayedLocation = Location(location)
             val point = GeoPoint(location.latitude, location.longitude)
@@ -280,6 +292,9 @@ class MainActivity : Activity() {
             textSize = 14f
             isAllCaps = false
             setTextColor(Color.WHITE)
+            // Narrow screens and larger system fonts need compact button padding.
+            minWidth = 0
+            setPadding(dp(2), 0, dp(2), 0)
             // Theme.Material.Light's default button is light grey: white text on
             // it is effectively invisible. Force an accessible dark action tint.
             backgroundTintList = ColorStateList.valueOf(Color.rgb(43, 68, 95))
