@@ -35,3 +35,30 @@
 - PR #7 和 #8 保持 OPEN；本整合 PR #10 為 Draft。
 - `main` 和 `develop` 在整合 QA 核准前均不修改。
 - 正式產品使用不得將 HUD Demo Data 當作道路合法性、GNSS 訊號或測速警告的實測資料。
+
+## 2026-10-14 Physical Device QA (Screenshots, Android 15 Xiaomi)
+
+User supplied six screenshots (1 map landscape, 1 idle HUD portrait, 1 idle HUD landscape, 3 vehicle demo portraits).
+
+### Screenshot-verified PASS
+- Both phone Activity screens rendered without a crash: MapLibre map and Compose HUD.
+- HUD portrait DEMO/NO ROUTE banner, no-route/Car/Scooter/Heavy selectors, warning data disclaimers, Azure Blue `GPS: 模擬`, red circular speed-limit badges.
+- Stage 1 HUD landscape layout has three panels and a bottom bar (the left guidance/control panel is scrollable).
+- `返回地圖` navigation control visibly present (its click/return effect not independently proven by a screenshot).
+
+### Blocking issue LANDSCAPE-MAP-01
+- On a wide landscape screen the map is compressed to a very thin horizontal strip while header, vehicle, HUD, zoom and status controls dominate vertical space.
+- Root cause: all controls and the map used the same `LinearLayout.VERTICAL`; the map is the only height-weighted view and receives negligible remaining height.
+- Hotfix: landscape `LinearLayout.HORIZONTAL` with the MapLibre view occupying the remaining width and a right `ScrollView` sidebar (260–360dp) for toolbar and status. Portrait remains unchanged. Attribution remains on the map, not behind controls.
+- **Post-fix actual phone render NOT RUN** until Product Owner installs a new successful CI artifact.
+
+### Non-blocking HUD landscape usability follow-up
+- Landscape screenshot shows part of the orange guidance subtitle ellipsized and the DEMO selector card partly below the visible left column. `verticalScroll` exists, but actual reachability of the controls must be verified by swiping that column.
+- Separate narrow 320dp / fontScale 1.3 screenshots remain NOT RUN; do not imply they passed.
+
+### Additional device QA required
+1. Landscape map occupies most of the screen and shows streets/attribution; right controls can be scrolled without dragging the map.
+2. Landscape map zoom, recenter, day/night, vehicle selection and HUD entry work; portrait after rotation remains usable.
+3. Landscape HUD left column scrolls to the DEMO controls without covering the bottom status bar; directions remain readable.
+4. HUD change vehicle mode, return to map, check shared persisted selection.
+5. Keep explicit DEMO notices and absence of real routing/speed-trap guarantees.
