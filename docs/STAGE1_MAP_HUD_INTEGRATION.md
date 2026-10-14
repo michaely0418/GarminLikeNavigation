@@ -62,3 +62,16 @@ User supplied six screenshots (1 map landscape, 1 idle HUD portrait, 1 idle HUD 
 3. Landscape HUD left column scrolls to the DEMO controls without covering the bottom status bar; directions remain readable.
 4. HUD change vehicle mode, return to map, check shared persisted selection.
 5. Keep explicit DEMO notices and absence of real routing/speed-trap guarantees.
+
+## APK stable signing acceptance gate
+
+Release/QA gate for [INSTALL-UPDATE-01](https://github.com/michaely0418/GarminLikeNavigation/pull/10):
+
+- [ ] Run two **different GitHub Actions workflow runs** with the repository-owned, nonproduction PKCS12 test key. Do not reveal the private key, base64 content or password.
+- [ ] Both runs upload `navigation-stable-test-apk`, report the **same certificate SHA-256 digest**, and show strictly increasing `versionCode`.
+- [ ] Confirm a test APK from the later run can install over the earlier run without uninstalling, preserving `SharedPreferences` for vehicle and map style.
+- [ ] First transition from the earlier ephemeral GitHub runner certificate may require one uninstall; this is expected, not a failure of stable signing.
+- [ ] During local Android Studio development, do not mix local debug-keystore-signed APKs with GitHub's stable test APK on the same installation.
+- [ ] Record the `adb install -r` error code if in-place upgrade still fails.
+
+Step-by-step secure setup: [docs/APK_UPDATE_SIGNING.md](APK_UPDATE_SIGNING.md).
