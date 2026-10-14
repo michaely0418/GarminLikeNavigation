@@ -1,0 +1,22 @@
+name: Feature or Stage task
+description: Track one feature with acceptance evidence
+title: "[STAGE] "
+labels: ["enhancement"]
+body:
+  - type: input
+    id: module
+    attributes:
+      label: Module and owner
+      placeholder: M09 / Gemini
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance tests / blocking gates
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies / files explicitly out of scope
