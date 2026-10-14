@@ -7,4 +7,5 @@ kotlin { jvmToolchain(17) }
 
 dependencies {
     api(project(":core:interfaces"))
+    testImplementation(libs.junit)
 }
