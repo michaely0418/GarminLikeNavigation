@@ -19,6 +19,12 @@ jobs:
         run: |
           cp routing-poc/.env.example routing-poc/.env
           docker compose -f routing-poc/compose.valhalla.yml config --quiet
+      - name: Validate Synology Container Manager engine templates
+        run: |
+          docker compose -f routing-poc/synology/compose.valhalla.yml config --format json > /tmp/valhalla.json
+          docker compose -f routing-poc/synology/compose.graphhopper.yml config --format json > /tmp/graphhopper.json
+          python3 routing-poc/scripts/verify_synology_compose.py /tmp/valhalla.json valhalla 8002
+          python3 routing-poc/scripts/verify_synology_compose.py /tmp/graphhopper.json graphhopper 8989
       - name: Confirm no routing engine or real road-law compliance was assumed
         run: |
           echo 'Preflight checks syntax and parser only; no container, OSM import, route call, or legal certification is run.'
