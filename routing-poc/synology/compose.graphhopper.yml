@@ -1,0 +1,29 @@
+# Stage 2 Synology Container Manager - Project directory example:
+# /volume1/docker/garmin-routing/graphhopper
+# Prerequisites: ./data/taiwan.osm.pbf and ./data/graphhopper-web-11.1.jar
+# GraphHopper 11.1 upstream Java 25 JAR; config.yml derived from upstream 11.x.
+# WARNING: this is a generic 'car' route PoC, NOT Taiwan law compliant.
+services:
+  graphhopper:
+    image: eclipse-temurin:25-jre
+    platform: linux/amd64
+    working_dir: /data
+    ports:
+      - "127.0.0.1:8989:8989"
+    volumes:
+      - ./data:/data
+      - ./graphhopper-config.yml:/config/graphhopper-config.yml:ro
+    command:
+      - java
+      - -Xms1g
+      - -Xmx4g
+      - -Ddw.graphhopper.datareader.file=/data/taiwan.osm.pbf
+      - -Ddw.graphhopper.graph.location=/data/graph-cache
+      - -jar
+      - /data/graphhopper-web-11.1.jar
+      - server
+      - /config/graphhopper-config.yml
+    cpus: 2.0
+    # Heap is 4 GB; allow at least 6 GB total container RAM on >=16GB host.
+    mem_limit: 6g
+    restart: "no"
