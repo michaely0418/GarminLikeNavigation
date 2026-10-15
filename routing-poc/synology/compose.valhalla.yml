@@ -19,7 +19,9 @@ services:
       use_tiles_ignore_pbf: "False"
       force_rebuild: "False"
       serve_tiles: "True"
-    cpus: 2.0
+    # Synology DSM kernel on this NAS rejects Docker NanoCPUs/CFS quotas.
+    # Do not add cpus/cpu_quota/deploy.resources.limits.cpus here.
+    # server_threads=2 reduces Valhalla worker concurrency but is NOT a hard CPU cap.
     # DS1621xs+: DSM reports 64 GB physically installed (above Synology's published 32 GB limit).
     # Preliminary 12 GB sandbox cap, NOT an observed engine memory requirement.
     # Start one routing engine at a time; keep headroom for DSM and other services.
