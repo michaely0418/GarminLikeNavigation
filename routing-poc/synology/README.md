@@ -322,3 +322,65 @@ The owner's Container Manager screenshot clearly shows:
 6. After applying and starting, confirm **one running Valhalla container** and that logs show graph generation. Monitor NAS available RAM / swap / CPU and free disk during import. Once service is ready, use the documented SSH tunnel and public-landmark API smoke test. This *only* verifies the route-engine PoC, **not** Taiwan vehicle legality.
 
 **Current validation status:** image pull PASS; network create PASS; **container create FAIL**; graph import/API **NOT RUN**. Revised Compose + CI code prepared, **NAS device retest PENDING**.
+
+## Valhalla baseline and next GH comparator — 2026-10-15
+
+### Evidence: completed Valhalla warm query experiment
+
+User NAS SSH screenshot confirms **3 warmup + 20 measured HTTP /route POST requests** using static public landmarks Taipei Main Station → Taipei 101, generic `auto` costing. Results:
+
+```text
+MinMs: 40.65
+P50Ms: 41.95
+P95Ms: 43.81
+MaxMs: 44.16
+DistanceKM: 6.239
+TravelSeconds: 939.77
+GeometryAvailable: True
+LegalRoutingVerified: False
+```
+
+Baseline is **NAS-local (127.0.0.1) only**; HTTPS, Android device-to-NAS network latency, real traffic, and lawful SCOOTER/HEAVY_MOTORCYCLE access remain unmeasured. User's Synology SSH `direct-tcpip` forwarding was denied by sshd, so **test each engine via a normal SSH login and commands on the NAS shell** instead of Windows `ssh -L` tunnels. Do not weaken SSH forwarding policy or open a LAN port just for PoC testing.
+
+### GraphHopper preparation — Windows PowerShell + File Station (NO engine start yet)
+
+1. Do **not** touch the existing `graphhopper/data/taiwan.osm.pbf`: its SHA-256 previously matched Valhalla's input and the Windows source. Use `/volume1/docker/garmin-routing/graphhopper` (NAS project path verified for Valhalla, but verify this GraphHopper folder exists in the same share).
+2. **Stop (not delete)** `garmin-valhalla-poc` in Container Manager. Stopping a container leaves host bind-mounted PBF and routing graph tiles intact. Leave the stopped project in place for later comparisons.
+3. In Windows PowerShell, download the official GraphHopper **11.1 executable JAR** from [upstream's documented Maven Central artifact](https://github.com/graphhopper/graphhopper/blob/master/README.md), record its SHA-256; **do not download any OSM data again**.
+
+   ```powershell
+   $Jar = Join-Path $env:USERPROFILE "Downloads\graphhopper-web-11.1.jar"
+   Invoke-WebRequest -Uri "https://repo1.maven.org/maven2/com/graphhopper/graphhopper-web/11.1/graphhopper-web-11.1.jar" -OutFile $Jar
+   Get-Item $Jar | Select-Object Name,Length
+   Get-FileHash -Algorithm SHA256 $Jar
+   ```
+
+   Only use the upstream Maven file, not a random third-party Docker image. Check it is a plausible-size JAR (not an HTML error page).
+4. Copy the JAR via SMB to **`docker/garmin-routing/graphhopper/data/graphhopper-web-11.1.jar`**; compare local and NAS SHA-256:
+
+   ```powershell
+   $Dir = "\\NAS_IP\docker\garmin-routing\graphhopper"
+   Copy-Item -LiteralPath $Jar -Destination (Join-Path $Dir "data\graphhopper-web-11.1.jar")
+   $Original = (Get-FileHash -Algorithm SHA256 $Jar).Hash
+   $OnNas = (Get-FileHash -Algorithm SHA256 (Join-Path $Dir "data\graphhopper-web-11.1.jar")).Hash
+   Write-Host "SameJar:" ($Original -eq $OnNas)
+   ```
+
+   Substitute NAS_IP **locally only**. Never commit LAN address, DSM account or passwords to a public GitHub PR.
+5. Save the **reviewed** [GraphHopper Compose](compose.graphhopper.yml) as `graphhopper/docker-compose.yml` and [GraphHopper configuration](graphhopper-config.yml) as `graphhopper/graphhopper-config.yml`. Both filenames must be exact. The reviewed Compose does **not** contain `cpus: 2.0` or CPU CFS restrictions because Synology rejected NanoCPUs. Host port remains **`127.0.0.1:8989:8989`**; application `bind_host: 0.0.0.0` is only **inside** Docker.
+6. Ensure `graphhopper/data/logs` is writable for the configuration's log appender. The Java process runs within the `/data` working directory and has `-Xmx8g` within a **12GB container memory ceiling**; check DSM Resource Monitor available RAM **immediately before** launching, and do not start both importers at once.
+7. Container Manager → **Project → Create** with `garmin-graphhopper-poc` and path `/volume1/docker/garmin-routing/graphhopper`; review Compose and resource limits before deploying.
+8. First GraphHopper run may take time importing `taiwan.osm.pbf` to `data/graph-cache`. Observe Project → Container logs, DSM available RAM, CPU, Btrfs free space and other service load. If Java heap/OOM, port, permission or config errors appear, retain evidence and stop; do not delete graph caches or alter the Valhalla project without diagnosis.
+9. When logs show the **HTTP server started**, test *NAS-local only* from ordinary `ssh` Linux session:
+
+   ```bash
+   curl -sS --max-time 15 -o /tmp/graphhopper_route.json -w 'HTTP %{http_code}\n' --get 'http://127.0.0.1:8989/route' \
+     --data-urlencode 'point=25.0478,121.5170' \
+     --data-urlencode 'point=25.0338,121.5645' \
+     --data-urlencode 'profile=car' \
+     --data-urlencode 'points_encoded=false'
+   ```
+
+   Then `python3 -c 'import json; d=json.load(open("/tmp/graphhopper_route.json")); p=d["paths"][0]; print("DistanceKM",p["distance"]/1000,"TravelSeconds",p["time"]/1000,"GeometryAvailable",bool(p.get("points")))' `. **HTTP/JSON and geometry must pass first**, before running the 3+20 benchmark.
+
+Note: GraphHopper 11.1's documented server requires **Java 25 or newer**, and source-provided `graphhopper-config.yml` ships a generic `car` profile. It is **not** a Taiwanese law-certified CAR / SCOOTER / HEAVY motorcycle routing profile. Comparing distance, time and p95 for one fixture is *not* a legal route-quality comparison; record additional OD pairs, reverse directions and official road evidence before selection.
