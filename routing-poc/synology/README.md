@@ -31,8 +31,8 @@ References:
 5. **UPS & backup window**: avoid overlapping full-Taiwan import with backup, rebuild, scrubbing, snapshots or other high-I/O tasks.
 3. **RAM planning for observed 64 GB (estimate, not an engine hard requirement):**
    - First attempt: **full Taiwan PBF**, using the **same exact input SHA-256** on both engines; no mandatory Taipei/New Taipei cropping solely due to RAM.
-   - **Valhalla:** `cpus: 2.0`, `server_threads=2`, `mem_limit: 12g`.
-   - **GraphHopper:** `cpus: 2.0`, `mem_limit: 12g`, JVM `-Xms1g -Xmx8g`. Java heap is only part of process/container memory; file caches, JVM native memory and indexing overhead also matter.
+   - **Valhalla:** `server_threads=2`, `mem_limit: 12g`; **no Docker hard CPU cap** because DSM kernel lacks working CFS quota support.
+   - **GraphHopper:** `mem_limit: 12g`, JVM `-Xms1g -Xmx8g`; **no Docker hard CPU cap**. Java heap is only part of process/container memory; file caches, JVM native memory and indexing overhead also matter.
    - Run **one engine at a time** for fair comparison and to protect DSM services. Treat the other ~52 GB as shared OS/NAS headroom, **not** guaranteed freely available (current apps and cache still consume it).
    - If either importer reaches its 12 GB memory limit, **stop and record OOM / peak resources**; consider a controlled increase after checking actual DSM memory pressure, or fall back to the **same** buffered, cropped PBF for both engines. Do not increase blindly.
    - Initial storage **planning reserve ~50 GB**, verify free capacity and actual graph sizes. Downloaded PBF size does not predict index/cache size.
@@ -90,7 +90,7 @@ Replace `NAS_IP` with the real NAS address. Do **not** proceed to comparative ti
 1. Using File Station, put `compose.valhalla.yml` into `/volume1/docker/garmin-routing/valhalla/docker-compose.yml`; create `data` and upload `taiwan.osm.pbf`.
 2. Container Manager → **專案 / Project** → **新增 / Create**.
 3. Project Name: `garmin-valhalla-poc`; Project Path: `/volume1/docker/garmin-routing/valhalla`. Choose use existing/upload compose YAML for `docker-compose.yml`, or paste the checked template.
-4. Verify port mapping `127.0.0.1:8002:8002`, data bind mount `./data:/custom_files`, `platform=linux/amd64`, two CPU cores and an initial 12GB memory cap (based on the owner's 64GB DSM report, not a measured consumption figure). **Do not enable Web Station web portal.**
+4. Verify port mapping `127.0.0.1:8002:8002`, data bind mount `./data:/custom_files`, `platform=linux/amd64`, **no Docker CFS CPU quota** (actual kernel does not support NanoCPUs) and an initial 12GB memory cap (based on the owner's 64GB DSM report, not a measured consumption figure). **Do not enable Web Station web portal.**
 5. Start only Valhalla. First startup will import the local PBF and produce tiles; monitor Project → Container → Log and Project → Statistics. Initial import can be CPU/RAM/I/O intensive; allow time and stop for OOM, DSM pressure, storage exhaustion or repeated restarts.
 6. When ready, only test its endpoint from the NAS local loopback or through the SSH tunnel below. A generic `auto` route proves API availability only.
 
@@ -104,7 +104,7 @@ Replace `NAS_IP` with the real NAS address. Do **not** proceed to comparative ti
    - Official GraphHopper 11.1 JAR: `https://repo1.maven.org/maven2/com/graphhopper/graphhopper-web/11.1/graphhopper-web-11.1.jar` → `data/graphhopper-web-11.1.jar`.
    - Ensure `data/logs` can be written if log file appender is enabled.
 3. Create Container Manager Project `garmin-graphhopper-poc`, path `/volume1/docker/garmin-routing/graphhopper`.
-4. Compose uses Eclipse Temurin **Java 25 JRE** + official GraphHopper JAR, generic `car` profile, 2 CPU, total container RAM cap 12GB and JVM `-Xmx8g`. Confirm current installed NAS RAM supports this allocation. GraphHopper upstream's sample config binds to localhost by default; using the repository-provided modified config is **necessary inside Docker** to serve port 8989 through its host-loopback bind.
+4. Compose uses Eclipse Temurin **Java 25 JRE** + official GraphHopper JAR, generic `car` profile, **no Docker CPU CFS cap**, total container RAM cap 12GB and JVM `-Xmx8g`. Confirm current installed NAS RAM supports this allocation. GraphHopper upstream's sample config binds to localhost by default; using the repository-provided modified config is **necessary inside Docker** to serve port 8989 through its host-loopback bind.
 5. Start only GraphHopper. Monitor graph import/build and Project logs. Ensure `/data/graph-cache` is generated. Do not infer legal CAR / SCOOTER / HEAVY_MOTORCYCLE compliance from the demo `car` profile.
 
 ## 6. Windows 11 → NAS local-only SSH tunnel for safe API access
@@ -135,7 +135,7 @@ If remote tunnel access does not work, first verify service listening inside the
 
 ## 7. Repeatable fair performance comparison
 
-Do one engine at a time on the **same NAS**, same frozen dataset SHA256, roughly equal memory caps, 2 CPU cores, and no other heavy NAS job. Record actual JVM heap / cache/profile differences so the results are not misrepresented as identical workloads.
+Do one engine at a time on the **same NAS**, same frozen dataset SHA256, roughly equal memory caps, sequential execution, and no other heavy NAS job (the DSM kernel does **not** permit Compose `cpus`, so no hard two-core limit is assumed). Record actual JVM heap / cache/profile differences so the results are not misrepresented as identical workloads.
 
 1. Record engine JAR version or image ID/digest, dataset SHA-256, NAS physical RAM, DSM/Container Manager version, CPU, free space, build start/end UTC, peak memory, graphs size, OOM flag and relevant logs.
 2. Build/rebuild cache once per engine, separately from route latency.
@@ -174,7 +174,7 @@ Results contain p50/p95 **observed end-to-end request latency**, distance (km), 
 ### 2026-10-15 64GB RAM update
 - DSM owner screenshot: `DS1621xs+`, `Xeon D-1527`, `4 cores`, `64 GB` physical memory.
 - **Official Synology capacity is only 32GB:** https://global.download.synology.com/download/Document/Hardware/ProductSpec/DiskStation/21-year/DS1621xs%2B/enu/Product_Spec_DS1621xs%2B_enu.pdf . Hardware-compatibility caveat applies.
-- Revised initial import target: **full Taiwan OSM**; Valhalla and GraphHopper each get a **12GB** container memory ceiling, GraphHopper 8GB JVM max heap, two CPU cores, executed **sequentially**.
+- Revised initial import target: **full Taiwan OSM**; Valhalla and GraphHopper each get a **12GB** container memory ceiling, GraphHopper 8GB JVM max heap, **no CFS CPU quota**, executed **sequentially**.
 - Still unknown: DSM version, Container Manager installed version, current system free memory under load, storage volume, free disk space, and actual OSM import statistics.
 
 ### 本次改動項目
@@ -296,8 +296,29 @@ This is an **OSM dataset equality PASS**, not proof of Valhalla tile-build succe
 2. **File Station → docker → garmin-routing → valhalla**: verify both **`data/taiwan.osm.pbf`** and (later) **`docker-compose.yml`**; do not alter the now-verified PBF.
 3. Download [the reviewed Valhalla Compose template](compose.valhalla.yml) as a text file and rename it `docker-compose.yml` in that **valhalla** Project folder; the **relative volume** `./data:/custom_files` expects the Compose Project context there. Do not save YAML inside `data`.
 4. **Container Manager → 專案 → 新增**: `garmin-valhalla-poc` as project name; the **project path** is the verified *absolute* NAS folder. Choose the **existing compose file / upload YAML** corresponding to `valhalla/docker-compose.yml`, as offered by the installed UI.
-5. Review before deployment: image `ghcr.io/valhalla/valhalla-scripted:latest`, container internal port `8002` published on **NAS localhost only**, `./data:/custom_files`, `cpus: 2.0`, `mem_limit: 12g`, and **`restart: "no"`**. Avoid DSM Web Portal or any router/firewall port forward.
+5. Review before deployment: image `ghcr.io/valhalla/valhalla-scripted:latest`, container internal port `8002` published on **NAS localhost only**, `./data:/custom_files`, **no `cpus` / CFS quota** (DSM rejects NanoCPUs), `mem_limit: 12g`, and **`restart: "no"`**. Avoid DSM Web Portal or any router/firewall port forward.
 6. **Do not click Build/Start yet** if Resource Monitor still reports only ~19GB available and the normal NAS workloads cannot be safely scheduled. Prefer a lower-load time with ~24GB available (operational caution, not engine minimum) and confirm no heavy backup/index job. When approved to execute, start *only* Valhalla; monitor DSM remaining available memory, swap/OOM, filesystem growth and Project logs during graph import.
 7. The first run uses `:latest` for exploratory validation; pin an immutable digest after confirming a working image. A container running successfully is **not** evidence of lawful vehicle routing; the route API remains isolated via `127.0.0.1`.
 
 **Before first actual import, ask the Product Owner to confirm the DSM Project path and fresh RAM available value**. Leave GraphHopper Project stopped until Valhalla import and the smoke check are complete.
+
+## 2026-10-15 — INSTALL BLOCKER: Synology NanoCPUs / CPU CFS unsupported (fixed in templates, device retest PENDING)
+
+The owner's Container Manager screenshot clearly shows:
+
+- Project **`garmin-valhalla-poc`** exists with host project path **`/volume1/docker/garmin-routing/valhalla`**, status red and **0 running containers**.
+- The official Valhalla Docker image was downloaded and extracted successfully; an isolated Compose network was created, then **container creation failed** with a daemon error beginning **`NanoCPUs can not be set, as your kernel does not support CPU CFS...`**. The tail of the on-screen log is horizontally truncated, so do not assume more words than visible.
+- **Root cause:** the *previous* Synology Compose template used `cpus: 2.0`. Docker implements fractional CPU quotas with the Linux CFS bandwidth controller. This DSM kernel environment cannot apply the quota; syntax-only CI did not catch the host incompatibility. The OSM PBF does not cause this failure; PBF import **has not begun**.
+- **Fix:** remove `cpus: 2.0` in *both* Synology Valhalla and GraphHopper Compose files. Do **not** replace it with `cpu_quota`, `cpu_period` or `deploy.resources.limits.cpus`: these can trigger the same kernel capability limitation. Keep `mem_limit: 12g`; for Valhalla `server_threads: '2'` reduces the worker count but **does not impose a hard global two-core CPU ceiling**. Monitor CPU use in DSM while importing. GraphHopper also has no hard CPU quota in this version.
+- **Preflight CI hardening:** Python `verify_synology_compose.py` now rejects CFS CPU quota settings even though `docker compose config` accepts them; additional unit tests cover `cpus`, `cpu_quota`, `deploy.resources.limits.cpus`. CI remains a syntax/policy check, **not** real NAS compatibility confirmation.
+
+### Recovery SOP — existing Project, without deleting the PBF
+
+1. In File Station, verify `/volume1/docker/garmin-routing/valhalla/data/taiwan.osm.pbf` is still present. **Do not delete or rename the `data/` folder**; the PBF checksum gate already passed.
+2. Container Manager → **專案 (Project)** → select **`garmin-valhalla-poc`** → **詳細資訊 (Details)** → **YAML 設定 (YAML Configurations)**. This UI can edit the Project Compose YAML and deploy it with the new settings, per [Synology Project documentation](https://kb.synology.com/en-global/DSM/help/ContainerManager/docker_project). If the GUI exposes a different menu order, locate the project YAML editor, **not** a container runtime resource setting.
+3. Remove the line **`cpus: 2.0`** and ensure it does not appear under `deploy.resources.limits`. Easiest: replace the Project Compose content with the updated [`compose.valhalla.yml`](compose.valhalla.yml) in this PR. Preserve `127.0.0.1:8002:8002`, `./data:/custom_files`, `mem_limit: 12g` and `restart: 'no'`.
+4. Save the corrected YAML. If prompted to **rebuild / deploy / start**, check DSM Resource Monitor available RAM first and choose a low-activity maintenance window. Prefer around 24GB available with this 12GB limit; previously only 19GB was reported, so **do not start the long full-Taiwan import yet** if NAS memory/CPU pressure is high.
+5. If Container Manager's failed project needs a cleanup before rebuilding, use **only this PoC Project's clean operation after confirming exactly what will be removed**. Do **not** click Delete Project or remove host data; Synology warns that Delete removes project containers and data. Do not run `docker system prune` or touch other projects. If the GUI cannot apply YAML due to partial container creation, inspect the single project's status/logs and ask for the new screenshot before doing anything destructive.
+6. After applying and starting, confirm **one running Valhalla container** and that logs show graph generation. Monitor NAS available RAM / swap / CPU and free disk during import. Once service is ready, use the documented SSH tunnel and public-landmark API smoke test. This *only* verifies the route-engine PoC, **not** Taiwan vehicle legality.
+
+**Current validation status:** image pull PASS; network create PASS; **container create FAIL**; graph import/API **NOT RUN**. Revised Compose + CI code prepared, **NAS device retest PENDING**.
