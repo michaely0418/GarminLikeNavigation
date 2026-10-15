@@ -22,6 +22,16 @@ def validate(data, service_name, expected_port):
         raise ValueError("Persistent host bind volume absent")
     if not service.get("mem_limit"):
         raise ValueError("Memory ceiling absent on shared NAS")
+    # This Synology device rejected Docker NanoCPUs at container create time:
+    # its kernel does not support the CPU CFS bandwidth feature Docker expects.
+    # Syntax-only 'docker compose config' will not detect this incompatibility.
+    if any(service.get(key) is not None for key in ("cpus", "cpu_quota", "cpu_period")):
+        raise ValueError("Unsupported Synology CPU CFS quota setting")
+    deploy = service.get("deploy") or {}
+    resources = deploy.get("resources") or {}
+    limits = resources.get("limits") or {}
+    if limits.get("cpus") is not None:
+        raise ValueError("Unsupported Synology CPU CFS quota setting under deploy")
     return True
 
 
