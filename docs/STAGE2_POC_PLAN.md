@@ -177,3 +177,25 @@ Product Owner provided a screenshot of a real `curl -sS ... POST http://127.0.0.
 **Still NOT RUN:** repeated request latency p50/p95, cold/warm response comparison, graph-cache size, peak CPU/RAM/SSD I/O, GraphHopper on identical SHA-256 OSM, alternate routes and direction, legal-road hard rejects for scooter/heavy motorcycle. Do not promote the result to a navigation-ready environment or connect Stage 1 Android HUD. The route ETA is a model estimate without measured traffic.
 
 **Next gate:** measure NAS-local Valhalla warm-up and at least 20 repeat latencies with the same non-personal public endpoints; record p50/p95, SHA-256 `259876A0E2C56B4102636A035CB073616FFAFEA6342A494B53F027C023E8FB82`, and engine build version `3.9.1-d558ba3db`; review DSM live CPU/RAM and graph directory usage. Only afterward evaluate the GraphHopper 11.1 comparator sequentially. Avoid changing SSH policy or exposing host ports merely to benchmark.
+
+### 2026-10-15 Valhalla — NAS-local 20-query latency baseline PASS (owner PowerShell/SSH evidence)
+
+Fixed fixture: approximate public Taipei Main Station (25.0478,121.5170) → Taipei 101 (25.0338,121.5645), generic `auto` costing, already imported fixed Taiwan OSM PBF SHA-256 `259876A0E2C56B4102636A035CB073616FFAFEA6342A494B53F027C023E8FB82`.
+
+| Field | Observed value |
+|---|---:|
+| Warmup | 3 requests (not included in metrics) |
+| Measured | **20 successful requests** |
+| Min | **40.65 ms** |
+| p50 (median) | **41.95 ms** |
+| p95 (nearest-rank, ceil(20×0.95) index) | **43.81 ms** |
+| Max | **44.16 ms** |
+| Route distance | **6.239 km** |
+| Engine-reported duration | **939.77 seconds** (~15m 40s) |
+| Route legs | **1** in preceding route smoke |
+| Encoded geometry available | **True** |
+| Taiwan legal routing verified | **False / not performed** |
+
+**Baseline verdict:** `VALHALLA_WARM_LOCAL_20_QUERY_P50_P95 = PASS` (fixed single public fixture, 3 warmups + 20 samples). This is *local NAS HTTP latency*, not Android remote network latency, throughput, SLA, stress test, or confidence interval. p95 from only 20 samples is particularly weak evidence for production tail latency; do not extrapolate to city-scale route diversity or load. Compare GraphHopper on the **same fixed PBF and same fixture** before selecting an engine; capture additional reverse-route fixture and cold-cache/import resource measurements separately. Do not assume the two engine route distance/ETA are comparable as legally correct driving outputs.
+
+**Next safe action:** stop only the Valhalla PoC project (do not delete the source PBF/cache) before GraphHopper importer is started. Prepare official GraphHopper 11.1 runnable JAR + reviewed NAS Compose + `graphhopper-config.yml` at `/volume1/docker/garmin-routing/graphhopper` and validate Maven artifact download/hash. The Synology host kernel did not support Docker CFS NanoCPUs, so the GH Compose deliberately has **no `cpus` limit**; retain `mem_limit: 12g` and `-Xmx8g`, monitor real NAS available memory and existing NAS services. Avoid LAN API publication and SSH policy weakening; validate GraphHopper routes via NAS-local loopback. The mobile HUD/demo and `develop/main` remain unchanged.
