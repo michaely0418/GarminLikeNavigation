@@ -37,6 +37,23 @@ class NASComposeTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "bind volume"):
             validate(self.good, "valhalla", 8002)
 
+    def test_reject_nano_cpus_quota(self):
+        self.good["services"]["valhalla"]["cpus"] = 2.0
+        with self.assertRaisesRegex(ValueError, "CPU CFS quota"):
+            validate(self.good, "valhalla", 8002)
+
+    def test_reject_cpu_quota(self):
+        self.good["services"]["valhalla"]["cpu_quota"] = 200000
+        with self.assertRaisesRegex(ValueError, "CPU CFS quota"):
+            validate(self.good, "valhalla", 8002)
+
+    def test_reject_deploy_cpus(self):
+        self.good["services"]["valhalla"]["deploy"] = {
+            "resources": {"limits": {"cpus": "2.0"}}
+        }
+        with self.assertRaisesRegex(ValueError, "CPU CFS quota"):
+            validate(self.good, "valhalla", 8002)
+
 
 if __name__ == "__main__":
     unittest.main()
