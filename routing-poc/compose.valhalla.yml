@@ -1,0 +1,19 @@
+# Local-host-only exploratory routing PoC; NOT a legally verified Taiwan navigator.
+# Upstream image: https://github.com/valhalla/valhalla/blob/master/docker/README.md
+services:
+  valhalla:
+    image: "${VALHALLA_IMAGE:?Set VALHALLA_IMAGE in .env}"
+    ports:
+      - "127.0.0.1:${VALHALLA_PORT:-8002}:8002"
+    volumes:
+      - ./data/valhalla:/custom_files
+    environment:
+      server_threads: "${VALHALLA_THREADS:-2}"
+      build_elevation: "False"
+      build_admins: "True"
+      build_time_zones: "True"
+      build_tar: "True"
+      use_tiles_ignore_pbf: "False"
+      force_rebuild: "False"
+      serve_tiles: "True"
+    restart: "no"
