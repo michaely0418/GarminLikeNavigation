@@ -63,9 +63,9 @@ Product Owner supplied DSM System Information screenshot showing:
 | NAS model | Synology DS1621xs+ | Owner screenshot |
 | CPU | Intel Xeon D-1527, 4 cores, 2.2 GHz | Owner screenshot |
 | Physical RAM | **64 GB** | Owner screenshot; differs from Synology's **published max 32 GB** (2 x 16 GB), so outside manufacturer's published memory validation |
-| DSM version | **NOT PROVIDED** | Must check DSM UI |
+| DSM version | **DSM 7.4.1-90080 Update 1** | Product Owner DSM screenshot dated 2026-10-15 |
 | Container Manager version | **NOT PROVIDED** | Must check Package Center |
-| Target volume free space | **NOT PROVIDED** | Must check Storage Manager |
+| Storage Space 1 free capacity | **5.6 TB free / 34.9 TB total; Btrfs; 29.3 TB used** | DSM Storage Manager screenshot; underlying Docker mount directory still needs verification |
 
 Source for official 32GB maximum: [Synology DS1621xs+ Product Specifications](https://global.download.synology.com/download/Document/Hardware/ProductSpec/DiskStation/21-year/DS1621xs%2B/enu/Product_Spec_DS1621xs%2B_enu.pdf). **Do not infer that DSM recognizing 64GB means Synology endorses the upgrade or guarantees long-term stability.**
 
@@ -80,9 +80,21 @@ Source for official 32GB maximum: [Synology DS1621xs+ Product Specifications](ht
 
 ### Remaining required facts before NAS deployment
 
-- [ ] DSM exact version and Container Manager version.
+- [x] DSM exact version: **7.4.1-90080 Update 1** (DSM screenshot).
+- [ ] Container Manager installed version (Package Center screenshot still needed).
 - [ ] Actual DSM free/available memory under normal services (the 64GB capacity alone is not availability).
-- [ ] Selected storage volume (e.g. `/volume1`) and free space, preferably screenshot from Storage Manager.
-- [ ] Power/backup plan for the NAS during high-I/O import; large experiments should not compete with active data protection jobs.
+- [x] Storage Space 1 reports **5.6 TB free** of **34.9 TB total** (Btrfs); initial 50 GB data/index budget has ample storage headroom.
+- [ ] Verify that Container Manager project paths actually reside on the intended volume (e.g. `/volume1/docker`), and confirm its own filesystem permissions and quota.
+- [x] DSM reports an **APC UPS detected** and a **465 GB read-write SSD cache** on the storage space; these are available features, **not** proof of sufficient UPS battery runtime or a separate 465 GB data volume.
+- [ ] Verify UPS battery runtime / graceful shutdown and the existing backup schedule; avoid overlapping NAS backup/indexing jobs with full-Taiwan OSM graph builds.
 - [ ] Check Issue #6 `main`/`develop` branch protection before any Draft PR integration.
 - [ ] Run real engine import, API queries and route compliance tests separately; currently **NOT RUN**.
+
+### Storage/safety details obtained from DSM screenshot (2026-10-15)
+
+- Storage Space 1 is **Btrfs**, with approximately **34.9 TB total**, **29.3 TB used** and **5.6 TB available**. These are user-interface rounded values, not byte-exact filesystem readings.
+- An SSD **read-write cache** of **465 GB** (reported **462.5 GB available** within the cache display) is attached. It is *not* an independent data volume; route graph and PBF must be stored in the proper Btrfs volume/project directory, not inside a cache directory.
+- DSM shows an attached **American Power Conversion (APC) UPS**, but runtime and safe shutdown policy are unverified.
+- With ample disk and 64 GB recognized RAM, initial **full Taiwan Geofabrik PBF** import is a reasonable test target at **2 CPU / 12GB RAM per engine**, **sequentially**, while recording actual resource use. This remains an experimental resource allocation.
+- **Do not paste or record** identifiers, QuickConnect IDs, Synology account addresses or NAS serial numbers from DSM screenshots in public issues or documentation. Only hardware/OS/volume data needed for testing is recorded.
+- Container Manager version, available RAM in normal service, project path and share permissions remain pending. No NAS container has been deployed by ChatGPT.
