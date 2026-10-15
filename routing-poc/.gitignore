@@ -1,0 +1,9 @@
+# Local OSM data, Valhalla graph tiles, personal service configs, API responses
+data/
+results/
+.env
+*.pbf
+*.osm
+*.tar
+*.log
+*.sqlite
