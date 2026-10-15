@@ -20,6 +20,8 @@ services:
       force_rebuild: "False"
       serve_tiles: "True"
     cpus: 2.0
-    # Only for hosts with >=16 GB total RAM: tune after checking NAS memory.
-    mem_limit: 6g
+    # DS1621xs+: DSM reports 64 GB physically installed (above Synology's published 32 GB limit).
+    # Preliminary 12 GB sandbox cap, NOT an observed engine memory requirement.
+    # Start one routing engine at a time; keep headroom for DSM and other services.
+    mem_limit: 12g
     restart: "no"
