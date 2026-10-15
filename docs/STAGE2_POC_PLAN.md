@@ -53,3 +53,36 @@
 - [ ] Valhalla container 匯入完成、服務正常，固定 fixture API smoke PASS（仍 NOT LEGALLY VERIFIED）。
 - [ ] GraphHopper 同資料 PoC 及性能比較（尚未實作）。
 - [ ] 三車種官方路段合法性驗證（尚未實作）。
+
+## 2026-10-15 DS1621xs+ hardware confirmation / S2-A Resource Baseline
+
+Product Owner supplied DSM System Information screenshot showing:
+
+| Item | DSM-reported value | Verification caveat |
+|---|---|---|
+| NAS model | Synology DS1621xs+ | Owner screenshot |
+| CPU | Intel Xeon D-1527, 4 cores, 2.2 GHz | Owner screenshot |
+| Physical RAM | **64 GB** | Owner screenshot; differs from Synology's **published max 32 GB** (2 x 16 GB), so outside manufacturer's published memory validation |
+| DSM version | **NOT PROVIDED** | Must check DSM UI |
+| Container Manager version | **NOT PROVIDED** | Must check Package Center |
+| Target volume free space | **NOT PROVIDED** | Must check Storage Manager |
+
+Source for official 32GB maximum: [Synology DS1621xs+ Product Specifications](https://global.download.synology.com/download/Document/Hardware/ProductSpec/DiskStation/21-year/DS1621xs%2B/enu/Product_Spec_DS1621xs%2B_enu.pdf). **Do not infer that DSM recognizing 64GB means Synology endorses the upgrade or guarantees long-term stability.**
+
+### Revised experiment configuration (INITIAL LIMITS ONLY)
+
+- Start with a **single frozen full-Taiwan OSM PBF** (no compulsory small-region crop). Both engines receive copies of the same verified SHA-256 input.
+- Valhalla NAS Compose: 2 CPU / **12GB memory limit** / 2 server threads.
+- GraphHopper 11.1 on Java 25: 2 CPU / **12GB memory limit** / **8GB maximum JVM heap**.
+- Start/stop engines sequentially, reserve NAS capacity for DSM, storage, and other running containers. Track actual memory pressure, OOM restarts, disk growth, and graph import runtime. On trouble, lower throughput, tune caps after measurement or compare the **same** buffered local crop on both.
+- Provision ~50GB free disk space **as a provisional planning reserve**, not a guaranteed engine requirement. Verify actual free space and cache growth before continuing.
+- Validate performance under the NAS owner's existing workloads before evaluating suitability for sustained routing service.
+
+### Remaining required facts before NAS deployment
+
+- [ ] DSM exact version and Container Manager version.
+- [ ] Actual DSM free/available memory under normal services (the 64GB capacity alone is not availability).
+- [ ] Selected storage volume (e.g. `/volume1`) and free space, preferably screenshot from Storage Manager.
+- [ ] Power/backup plan for the NAS during high-I/O import; large experiments should not compete with active data protection jobs.
+- [ ] Check Issue #6 `main`/`develop` branch protection before any Draft PR integration.
+- [ ] Run real engine import, API queries and route compliance tests separately; currently **NOT RUN**.
