@@ -16,7 +16,7 @@ services:
     command:
       - java
       - -Xms1g
-      - -Xmx4g
+      - -Xmx8g
       - -Ddw.graphhopper.datareader.file=/data/taiwan.osm.pbf
       - -Ddw.graphhopper.graph.location=/data/graph-cache
       - -jar
@@ -24,6 +24,8 @@ services:
       - server
       - /config/graphhopper-config.yml
     cpus: 2.0
-    # Heap is 4 GB; allow at least 6 GB total container RAM on >=16GB host.
-    mem_limit: 6g
+    # Owner DSM screenshot: 64 GB installed (above the official 32 GB listed maximum).
+    # Allow 8 GB heap within an exploratory 12 GB container limit; monitor actual RSS.
+    # Never run this benchmark concurrently with Valhalla during first-pass comparison.
+    mem_limit: 12g
     restart: "no"
