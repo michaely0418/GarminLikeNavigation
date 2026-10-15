@@ -72,8 +72,8 @@ Source for official 32GB maximum: [Synology DS1621xs+ Product Specifications](ht
 ### Revised experiment configuration (INITIAL LIMITS ONLY)
 
 - Start with a **single frozen full-Taiwan OSM PBF** (no compulsory small-region crop). Both engines receive copies of the same verified SHA-256 input.
-- Valhalla NAS Compose: 2 CPU / **12GB memory limit** / 2 server threads.
-- GraphHopper 11.1 on Java 25: 2 CPU / **12GB memory limit** / **8GB maximum JVM heap**.
+- Valhalla NAS Compose: **no hard CPU quota on this DSM kernel** / **12GB memory limit** / 2 Valhalla server threads (not a hard 2-core cap).
+- GraphHopper 11.1 on Java 25: **no hard CPU quota on this DSM kernel** / **12GB memory limit** / **8GB maximum JVM heap**.
 - Start/stop engines sequentially, reserve NAS capacity for DSM, storage, and other running containers. Track actual memory pressure, OOM restarts, disk growth, and graph import runtime. On trouble, lower throughput, tune caps after measurement or compare the **same** buffered local crop on both.
 - Provision ~50GB free disk space **as a provisional planning reserve**, not a guaranteed engine requirement. Verify actual free space and cache growth before continuing.
 - Validate performance under the NAS owner's existing workloads before evaluating suitability for sustained routing service.
@@ -95,7 +95,7 @@ Source for official 32GB maximum: [Synology DS1621xs+ Product Specifications](ht
 - Storage Space 1 is **Btrfs**, with approximately **34.9 TB total**, **29.3 TB used** and **5.6 TB available**. These are user-interface rounded values, not byte-exact filesystem readings.
 - An SSD **read-write cache** of **465 GB** (reported **462.5 GB available** within the cache display) is attached. It is *not* an independent data volume; route graph and PBF must be stored in the proper Btrfs volume/project directory, not inside a cache directory.
 - DSM shows an attached **American Power Conversion (APC) UPS**, but runtime and safe shutdown policy are unverified.
-- With ample disk and 64 GB recognized RAM, initial **full Taiwan Geofabrik PBF** import is a reasonable test target at **2 CPU / 12GB RAM per engine**, **sequentially**, while recording actual resource use. This remains an experimental resource allocation.
+- With ample disk and 64 GB recognized RAM, initial **full Taiwan Geofabrik PBF** import is a reasonable test target at **12GB RAM per engine, with no CFS CPU quota**, **sequentially**, while recording actual resource use. This remains an experimental resource allocation.
 - **Do not paste or record** identifiers, QuickConnect IDs, Synology account addresses or NAS serial numbers from DSM screenshots in public issues or documentation. Only hardware/OS/volume data needed for testing is recorded.
 - Container Manager **package version 24.0.2-1706 verified running**. Available RAM under normal service, actual project path/share permissions, and container Engine/Compose runtime versions remain pending. No NAS container has been deployed by ChatGPT.
 
@@ -148,3 +148,11 @@ The Product Owner provided a Windows PowerShell output showing successful file c
 - The NAS project root is accessed from Windows as a `docker/garmin-routing` SMB share, but **the underlying NAS Unix/volume path remains unverified**; before entering a path in Container Manager, confirm DSM Control Panel → Shared Folder storage location or equivalent NAS CLI path.
 - Source site: [Geofabrik Taiwan Extract](https://download.geofabrik.de/asia/taiwan.html). Exact source snapshot date/time cannot be established solely from hash/size screenshot; if known locally record it in the private experiment notes, do not invent a timestamp.
 - **Readiness:** PBF staging completed; Synology `garmin-valhalla-poc` has not been created or started. Initial memory available previously reported **19GB**, below suggested cautious target **24GB** for a container with a 12GB memory ceiling. Before actual full-country graph build, confirm NAS memory and choose an appropriately low-load window. No Android Stage 1 changes.
+
+### 2026-10-15 Synology container creation error — NanoCPUs gate
+
+- The user created Container Manager Project `garmin-valhalla-poc` under the now-visible host path **`/volume1/docker/garmin-routing/valhalla`**. Image pull/extraction and network creation succeeded, but Docker **container creation** failed with visible error prefix `NanoCPUs can not be set, as your kernel does not support CPU CFS...`; **zero containers** shown, no graph build yet.
+- Cause: old NAS Compose included `cpus: 2.0`. Docker maps this to CFS-based NanoCPUs, unsupported on the current DSM host kernel/cgroup configuration. This does **not** indicate corrupted or incompatible Taiwan PBF input.
+- Both Synology engine templates now **omit `cpus`**, retaining the 12GB memory limit. Valhalla `server_threads=2` is an application worker count, **not** a host CPU hard cap. During graph build observe actual NAS CPU resource pressure; if necessary pause other workloads or use an identical smaller PBF region for both engines. Do not replace `cpus` with another CFS quota field.
+- The repository preflight validator and 3 new offline tests reject the unsupported CPU quota forms. Existing project must be updated via **Project → Details → YAML Configurations** and redeployed; never delete the user's verified PBF folder. Before triggering the expensive first import check up-to-date DSM available RAM and use a low-load maintenance window.
+- **Real NAS recovery / actual importer success remain PENDING**, notwithstanding CI green.
