@@ -2,7 +2,7 @@
 
 **STATUS: CONFIGURATION ONLY / DEPLOYMENT NOT RUN / TAIWAN ROAD LAW NOT VERIFIED.**
 
-Target: Synology DS1621xs+ (Intel Xeon D-1527, linux/amd64). This is a **public technical specification**, not an observation of the owner's installed RAM or DSM version. Verify actual RAM, DSM version, Container Manager availability, and volume free space **on the NAS** before deployment.
+Target: Synology DS1621xs+ (Intel Xeon D-1527, 4 cores at 2.2 GHz, linux/amd64). **The Product Owner provided a 2026-10-15 DSM screenshot reporting `實體記憶體大小 64 GB`**. This is owner-provided observed RAM, **not** the official supported maximum. Synology's published DS1621xs+ memory limit is **32 GB (2 x 16 GB)**: a recognized 64 GB upgrade is outside that published validation limit, and does not guarantee long-running reliability or Synology warranty/support. Confirm the current DSM/Container Manager version, available RAM under NAS load and storage free space before import.
 
 References:
 - Synology Container Manager > Project: https://kb.synology.com/en-global/DSM/help/ContainerManager/docker_project
@@ -16,10 +16,14 @@ References:
 
 1. DSM > **控制台 > 資訊中心**: record DSM version, total physical RAM, CPU/architecture. Verify Container Manager is installed and supported for this DSM.
 2. DSM > **儲存空間管理員**: check the actual volume containing Docker project folders. **Provision around 50 GB free initially** for two independent graph caches, raw OSM and backups/logs; this is a planning reserve, *not a measured requirement*.
-3. **RAM planning (estimate, not an engine hard requirement):**
-   - 8 GB installed: do **not** immediately import all of Taiwan or run both engines. Use the same constrained Taipei/New Taipei extract for preliminary exploration, review NAS load and memory first; cap only one engine at a time around 3GB and GraphHopper heap below its cap, accepting possible OOM during graph import.
-   - >=16 GB: start one engine at a time, `cpus: 2.0`, `mem_limit: 6g`, GraphHopper `-Xmx4g` / `-Xms1g`. Stop if other NAS services starve or OOM occurs. Actual import may exceed these numbers; measure rather than guess.
-   - 32 GB: more margin for experiments; still run sequentially initially to collect comparable data without contention.
+3. **RAM planning for observed 64 GB (estimate, not an engine hard requirement):**
+   - First attempt: **full Taiwan PBF**, using the **same exact input SHA-256** on both engines; no mandatory Taipei/New Taipei cropping solely due to RAM.
+   - **Valhalla:** `cpus: 2.0`, `server_threads=2`, `mem_limit: 12g`.
+   - **GraphHopper:** `cpus: 2.0`, `mem_limit: 12g`, JVM `-Xms1g -Xmx8g`. Java heap is only part of process/container memory; file caches, JVM native memory and indexing overhead also matter.
+   - Run **one engine at a time** for fair comparison and to protect DSM services. Treat the other ~52 GB as shared OS/NAS headroom, **not** guaranteed freely available (current apps and cache still consume it).
+   - If either importer reaches its 12 GB memory limit, **stop and record OOM / peak resources**; consider a controlled increase after checking actual DSM memory pressure, or fall back to the **same** buffered, cropped PBF for both engines. Do not increase blindly.
+   - Initial storage **planning reserve ~50 GB**, verify free capacity and actual graph sizes. Downloaded PBF size does not predict index/cache size.
+   - Since 64 GB exceeds Synology's **official 32 GB** limit, watch for ECC/memory warnings and NAS stability; do not claim this hardware configuration is manufacturer-certified.
 4. Do not expose test API through DDNS, Cloudflare Tunnel, reverse proxy, router forwarding, DSM portal, or a NAS LAN/public host-port binding. Compose port bindings **`127.0.0.1` only**. No TLS or auth is configured.
 5. Obtain/update the image digest after initial pull and lock it when making a reproducible comparison. `latest` / `25-jre` are exploratory placeholders, not immutable versions.
 
@@ -73,7 +77,7 @@ Replace `NAS_IP` with the real NAS address. Do **not** proceed to comparative ti
 1. Using File Station, put `compose.valhalla.yml` into `/volume1/docker/garmin-routing/valhalla/docker-compose.yml`; create `data` and upload `taiwan.osm.pbf`.
 2. Container Manager → **專案 / Project** → **新增 / Create**.
 3. Project Name: `garmin-valhalla-poc`; Project Path: `/volume1/docker/garmin-routing/valhalla`. Choose use existing/upload compose YAML for `docker-compose.yml`, or paste the checked template.
-4. Verify port mapping `127.0.0.1:8002:8002`, data bind mount `./data:/custom_files`, `platform=linux/amd64`, two CPU cores and memory cap 6GB (only on a NAS with sufficient free RAM). **Do not enable Web Station web portal.**
+4. Verify port mapping `127.0.0.1:8002:8002`, data bind mount `./data:/custom_files`, `platform=linux/amd64`, two CPU cores and an initial 12GB memory cap (based on the owner's 64GB DSM report, not a measured consumption figure). **Do not enable Web Station web portal.**
 5. Start only Valhalla. First startup will import the local PBF and produce tiles; monitor Project → Container → Log and Project → Statistics. Initial import can be CPU/RAM/I/O intensive; allow time and stop for OOM, DSM pressure, storage exhaustion or repeated restarts.
 6. When ready, only test its endpoint from the NAS local loopback or through the SSH tunnel below. A generic `auto` route proves API availability only.
 
@@ -87,7 +91,7 @@ Replace `NAS_IP` with the real NAS address. Do **not** proceed to comparative ti
    - Official GraphHopper 11.1 JAR: `https://repo1.maven.org/maven2/com/graphhopper/graphhopper-web/11.1/graphhopper-web-11.1.jar` → `data/graphhopper-web-11.1.jar`.
    - Ensure `data/logs` can be written if log file appender is enabled.
 3. Create Container Manager Project `garmin-graphhopper-poc`, path `/volume1/docker/garmin-routing/graphhopper`.
-4. Compose uses Eclipse Temurin **Java 25 JRE** + official GraphHopper JAR, generic `car` profile, 2 CPU, total container RAM cap 6GB and JVM `-Xmx4g`. Confirm current installed NAS RAM supports this allocation. GraphHopper upstream's sample config binds to localhost by default; using the repository-provided modified config is **necessary inside Docker** to serve port 8989 through its host-loopback bind.
+4. Compose uses Eclipse Temurin **Java 25 JRE** + official GraphHopper JAR, generic `car` profile, 2 CPU, total container RAM cap 12GB and JVM `-Xmx8g`. Confirm current installed NAS RAM supports this allocation. GraphHopper upstream's sample config binds to localhost by default; using the repository-provided modified config is **necessary inside Docker** to serve port 8989 through its host-loopback bind.
 5. Start only GraphHopper. Monitor graph import/build and Project logs. Ensure `/data/graph-cache` is generated. Do not infer legal CAR / SCOOTER / HEAVY_MOTORCYCLE compliance from the demo `car` profile.
 
 ## 6. Windows 11 → NAS local-only SSH tunnel for safe API access
@@ -153,6 +157,12 @@ Results contain p50/p95 **observed end-to-end request latency**, distance (km), 
 | Unknown high-risk segments | FAIL CLOSED | FAIL CLOSED |
 
 **Before any Android App integration:** G1 Google Places still BLOCKED; G2 Taiwan road regulations still IN PROGRESS. No actual vehicle routing data/UI exposure to end users. Benchmark/schema checks do **not** certify allowed roads.
+
+### 2026-10-15 64GB RAM update
+- DSM owner screenshot: `DS1621xs+`, `Xeon D-1527`, `4 cores`, `64 GB` physical memory.
+- **Official Synology capacity is only 32GB:** https://global.download.synology.com/download/Document/Hardware/ProductSpec/DiskStation/21-year/DS1621xs%2B/enu/Product_Spec_DS1621xs%2B_enu.pdf . Hardware-compatibility caveat applies.
+- Revised initial import target: **full Taiwan OSM**; Valhalla and GraphHopper each get a **12GB** container memory ceiling, GraphHopper 8GB JVM max heap, two CPU cores, executed **sequentially**.
+- Still unknown: DSM version, Container Manager installed version, current system free memory under load, storage volume, free disk space, and actual OSM import statistics.
 
 ### 本次改動項目
 - Synology-specific Docker Compose for two engines, source-configured GraphHopper, DSM Project SOP, Windows SSH tunnels, identical PBF and reproducible metrics script.
