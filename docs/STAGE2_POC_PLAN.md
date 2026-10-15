@@ -64,7 +64,7 @@ Product Owner supplied DSM System Information screenshot showing:
 | CPU | Intel Xeon D-1527, 4 cores, 2.2 GHz | Owner screenshot |
 | Physical RAM | **64 GB** | Owner screenshot; differs from Synology's **published max 32 GB** (2 x 16 GB), so outside manufacturer's published memory validation |
 | DSM version | **DSM 7.4.1-90080 Update 1** | Product Owner DSM screenshot dated 2026-10-15 |
-| Container Manager version | **NOT PROVIDED** | Must check Package Center |
+| Container Manager version | **24.0.2-1706 (installed / running)** | Product Owner Package Center screenshot, reports latest online version also 24.0.2-1706; this is the **Synology package** version, not independently verified Engine/Compose CLI version |
 | Storage Space 1 free capacity | **5.6 TB free / 34.9 TB total; Btrfs; 29.3 TB used** | DSM Storage Manager screenshot; underlying Docker mount directory still needs verification |
 
 Source for official 32GB maximum: [Synology DS1621xs+ Product Specifications](https://global.download.synology.com/download/Document/Hardware/ProductSpec/DiskStation/21-year/DS1621xs%2B/enu/Product_Spec_DS1621xs%2B_enu.pdf). **Do not infer that DSM recognizing 64GB means Synology endorses the upgrade or guarantees long-term stability.**
@@ -81,7 +81,7 @@ Source for official 32GB maximum: [Synology DS1621xs+ Product Specifications](ht
 ### Remaining required facts before NAS deployment
 
 - [x] DSM exact version: **7.4.1-90080 Update 1** (DSM screenshot).
-- [ ] Container Manager installed version (Package Center screenshot still needed).
+- [x] Container Manager package **24.0.2-1706** is installed and running, screenshot confirms same online latest version; Docker Engine and Compose plugin internal versions still not separately queried.
 - [ ] Actual DSM free/available memory under normal services (the 64GB capacity alone is not availability).
 - [x] Storage Space 1 reports **5.6 TB free** of **34.9 TB total** (Btrfs); initial 50 GB data/index budget has ample storage headroom.
 - [ ] Verify that Container Manager project paths actually reside on the intended volume (e.g. `/volume1/docker`), and confirm its own filesystem permissions and quota.
@@ -97,4 +97,11 @@ Source for official 32GB maximum: [Synology DS1621xs+ Product Specifications](ht
 - DSM shows an attached **American Power Conversion (APC) UPS**, but runtime and safe shutdown policy are unverified.
 - With ample disk and 64 GB recognized RAM, initial **full Taiwan Geofabrik PBF** import is a reasonable test target at **2 CPU / 12GB RAM per engine**, **sequentially**, while recording actual resource use. This remains an experimental resource allocation.
 - **Do not paste or record** identifiers, QuickConnect IDs, Synology account addresses or NAS serial numbers from DSM screenshots in public issues or documentation. Only hardware/OS/volume data needed for testing is recorded.
-- Container Manager version, available RAM in normal service, project path and share permissions remain pending. No NAS container has been deployed by ChatGPT.
+- Container Manager **package version 24.0.2-1706 verified running**. Available RAM under normal service, actual project path/share permissions, and container Engine/Compose runtime versions remain pending. No NAS container has been deployed by ChatGPT.
+
+### 2026-10-15 Container Manager screenshot acceptance
+
+- Screenshot shows **Container Manager** (package displayed under Docker Inc., publisher Synology Inc.) **已啟動**, **已安裝版本 24.0.2-1706**, **最新線上版本 24.0.2-1706**, and **安裝位置 儲存空間 1**.
+- This confirms the Synology package is present on Storage Space 1 and up-to-date as displayed by Package Center. **It does not verify the absolute filesystem path for each future Project, nor the Docker Compose CLI/runtime version or any running Valhalla/GraphHopper container.**
+- Next preflight: choose a dedicated writable Shared Folder path on the intended Btrfs volume; review DSM Resource Monitor's *available* physical memory; check Package Center Container Manager Project create UI before importing or running the official Valhalla container.
+- Only after verifying the volume path and free NAS memory should the owner stage one frozen Geofabrik Taiwan `.osm.pbf`, record SHA-256, then mount it read/write into `/custom_files` for controlled first-time tile builds.
