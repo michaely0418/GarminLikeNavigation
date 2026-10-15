@@ -12,10 +12,23 @@ References:
 - Geofabrik Taiwan: https://download.geofabrik.de/asia/taiwan.html
 - Road-law specification: `docs/VEHICLE_RULES.md`; Stage 2 governance: `docs/API_POLICY.md`.
 
-## 1. NAS prerequisites (do not assume they are met)
+## 1. NAS prerequisites — 2026-10-15 DSM screenshot results
 
-1. DSM > **控制台 > 資訊中心**: record DSM version, total physical RAM, CPU/architecture. Verify Container Manager is installed and supported for this DSM.
-2. DSM > **儲存空間管理員**: check the actual volume containing Docker project folders. **Provision around 50 GB free initially** for two independent graph caches, raw OSM and backups/logs; this is a planning reserve, *not a measured requirement*.
+**User-confirmed:** DS1621xs+, Xeon D-1527 (4 cores / 2.2 GHz), physical RAM **64 GB**, DSM **7.4.1-90080 Update 1**. DSM Storage Manager reports **Storage Space 1: Btrfs, 34.9 TB total / 29.3 TB used / 5.6 TB available**. A 465 GB **read-write SSD cache** is present. An **APC UPS** is detected; actual battery runtime and UPS shutdown configuration are unverified.
+
+- **Still needed:** Package Center → **Container Manager** installed version, NAS available RAM under normal workload (Resource Monitor), actual project volume/share path and writable permissions.
+- **Initial disk planning:** reserve around **50 GB** for the raw input, two graph indexes and logs (planning estimate, not a measured requirement). The DSM screenshot's **5.6 TB free** is ample for this reserve. Do not infer that `儲存空間 1` means files are mounted at `/volume1`; verify the intended volume/project Shared Folder path before running.
+- **SSD cache is not a storage volume:** do not configure a graph/PBF bind mount using the cache capacity; use normal NAS Btrfs Shared Folder storage. Cache write amplification, graph build I/O and snapshots must be monitored.
+- **UPS presence is not runtime assurance:** confirm APC UPS shutdown behavior and battery runtime if running a long initial graph import.
+- **Privacy:** DSM screenshots may display NAS account, QuickConnect ID and serial number. Do not copy those into a public GitHub Issue, log, SOP or screenshot shared externally.
+
+### GUI preflight checklist
+
+1. **Package Center → Installed → Container Manager**: record version and status. If it is not installed, install it from a Synology-supported source only; do not guess compatibility.
+2. **Resource Monitor → Memory / CPU**: capture actual available RAM and NAS load while normal containers and services are running; 64 GB physical RAM does not equal 64 GB free.
+3. **Storage Manager → Storage / Volumes** and **Control Panel → Shared Folder**: locate the intended shared folder `docker` and its actual volume. If it does not exist, create a separate NAS Shared Folder for `garmin-routing`, rather than modifying existing application directories.
+4. **Container Manager → Project**: confirm it can create Compose projects, and do not click Build/Start until the local OSM data and correct volume path are ready.
+5. **UPS & backup window**: avoid overlapping full-Taiwan import with backup, rebuild, scrubbing, snapshots or other high-I/O tasks.
 3. **RAM planning for observed 64 GB (estimate, not an engine hard requirement):**
    - First attempt: **full Taiwan PBF**, using the **same exact input SHA-256** on both engines; no mandatory Taipei/New Taipei cropping solely due to RAM.
    - **Valhalla:** `cpus: 2.0`, `server_threads=2`, `mem_limit: 12g`.
@@ -173,3 +186,18 @@ Results contain p50/p95 **observed end-to-end request latency**, distance (km), 
 - [ ] User verifies both engines locally import the same PBF, response parsers work, and metrics are recorded.
 - [ ] Gemini cross-reviews templates before merging Draft PR #13.
 - [ ] GitHub Issue #6 Rulesets applied and tested before merge.
+
+## Verified DSM data vs outstanding prerequisite (2026-10-15)
+
+| Check | Status |
+|---|---|
+| DS1621xs+ + 64 GB recognized memory + Xeon D-1527 | **CONFIRMED by owner DSM screenshot** |
+| DSM 7.4.1-90080 Update 1 | **CONFIRMED by owner DSM screenshot** |
+| Storage Space 1 Btrfs / 34.9 TB total / 5.6 TB free | **CONFIRMED by owner screenshot** |
+| SSD read-write cache and APC UPS detected | **CONFIRMED presence**, cache capacity is NOT graph storage; UPS runtime remains unknown |
+| Container Manager installed version | **NOT YET PROVIDED** |
+| Available NAS memory under real workload | **NOT YET PROVIDED** |
+| Actual target project Shared Folder / mount directory | **NOT YET VERIFIED** |
+| Native on-NAS Docker run / OSM import / API benchmark | **NOT RUN** |
+
+The templates remain **PoC-only** and limited to local NAS loopback; avoid exposing the endpoint through LAN forwarding, reverse proxies, DDNS or Cloudflare Tunnel until service authentication and TLS are designed. Taiwan legal vehicle rules and Google Places license gating remain unchanged.
