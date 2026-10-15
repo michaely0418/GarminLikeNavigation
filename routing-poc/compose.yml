@@ -1,0 +1,20 @@
+# Stage 2 local-only experimental routing service, NOT road-law certified.
+# Host port binds to localhost only; do not expose it through a reverse proxy.
+services:
+  valhalla:
+    image: ${VALHALLA_IMAGE:-ghcr.io/nilsnolde/docker-valhalla/valhalla:latest}
+    container_name: garminlike-stage2-valhalla
+    ports:
+      - "127.0.0.1:8002:8002"
+    environment:
+      use_tiles_ignore_pbf: "False"
+      build_elevation: "False"
+      build_admins: "False"
+      build_time_zones: "False"
+      build_transit: "False"
+      build_tar: "True"
+      server_threads: "2"
+      serve_tiles: "True"
+    volumes:
+      - ./data/valhalla:/custom_files
+    restart: "no"
