@@ -105,3 +105,28 @@ Source for official 32GB maximum: [Synology DS1621xs+ Product Specifications](ht
 - This confirms the Synology package is present on Storage Space 1 and up-to-date as displayed by Package Center. **It does not verify the absolute filesystem path for each future Project, nor the Docker Compose CLI/runtime version or any running Valhalla/GraphHopper container.**
 - Next preflight: choose a dedicated writable Shared Folder path on the intended Btrfs volume; review DSM Resource Monitor's *available* physical memory; check Package Center Container Manager Project create UI before importing or running the official Valhalla container.
 - Only after verifying the volume path and free NAS memory should the owner stage one frozen Geofabrik Taiwan `.osm.pbf`, record SHA-256, then mount it read/write into `/custom_files` for controlled first-time tile builds.
+
+### 2026-10-15 Resource Monitor and File Station verification
+
+The Product Owner supplied two new DSM screenshots. **Only the following non-identifying facts are recorded:**
+
+| Resource Monitor memory category | DSM-reported value |
+|---|---|
+| Total physical RAM | 64 GB |
+| Used percentage | 54% |
+| In use | 34.1 GB |
+| Available | **19 GB** |
+| Cached | 9 GB |
+| Reserved | 1.4 GB |
+| Buffered | 453 MB |
+
+**Interpretation:** The physical installed capacity is 64 GB, but the **current available** memory reported by DSM is only **19 GB**, while existing NAS applications/services are using substantial RAM. The cached 9 GB is shown separately; never add it to the 19 GB available without knowing the DSM memory accounting/reclaimability semantics. The existing `mem_limit: 12g` templates set container ceilings, **not preallocated reservations**. If a container grows to its 12GB ceiling, there could be as little as ~7GB of reported available RAM remaining, excluding concurrent changes in other NAS loads. Avoid claiming this is safe for the existing workloads merely because the NAS has 64 GB.
+
+**Immediate safe next actions:**
+1. Proceed with **directory and OSM PBF preparation only**. File Station screenshot shows `docker/garmin-routing/` and the two named subfolders `graphhopper/`, `valhalla/`; it does **not** verify the `data/` subfolders, the absolute `/volumeN` path, the POSIX filesystem permissions or a running container.
+2. Before running graph build, verify the intended `docker` share and physical volume, check current Resource Monitor available memory again, and avoid other peak NAS jobs. As a conservative target, schedule import when DSM shows **at least ~24GB available** if keeping the 12GB container cap, allowing approximately 12GB remaining headroom at peak. This is a **local operational precaution**, not a formal minimum RAM guarantee; other memory consumption can fluctuate.
+3. If peak memory approaches the cap or the NAS's available RAM becomes uncomfortably low, stop import and log peak RSS, OOM events and NAS service impact. Tuning the cap or using an identical smaller OSM crop for both engines is allowed for PoC, but never run both index builders concurrently.
+4. Next factual confirmation: DSM Control Panel → Shared Folder (actual `docker` share on target volume); check `valhalla/data` and `graphhopper/data` exist and are writable; download a single public Geofabrik Taiwan PBF and record the source/date/SHA-256 before copying it into both local directories.
+5. Continue to keep GitHub PR #13 Draft and Stage 2 backend unconnected from the mobile App. No live OSM graph import or route legality verification has occurred.
+
+**Privacy:** File Station screenshot does not verify an absolute host path. Avoid copying device identifiers, account names or LAN addresses into public source or PR comments.
