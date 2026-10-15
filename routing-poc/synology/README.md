@@ -273,3 +273,31 @@ Replace `NAS_IP` with the real NAS host/LAN IP on **the local PC only**; do not 
 ### Immediate step 3: Report preflight evidence
 
 Return just: verified Container Manager Project path / Shared Folder target, PBF file size and SHA-256 result, whether both `data` folders are present, and the latest Resource Monitor's **available** RAM immediately prior to import. Then create **Valhalla first** with the local-host-only Compose file; GraphHopper remains stopped. The Demo routes, speed limits, Taiwan motorcycle road access and Google Places are **not** verified by this PoC.
+
+## 2026-10-15 — Full-Taiwan dataset file-integrity gate PASSED
+
+Owner PowerShell evidence now confirms:
+
+```text
+Local = Valhalla: True
+Local = GraphHopper: True
+SameDataset: True
+Local PBF bytes: 327581009
+Valhalla PBF bytes: 327581009
+GraphHopper PBF bytes: 327581009
+SHA-256: 259876A0E2C56B4102636A035CB073616FFAFEA6342A494B53F027C023E8FB82
+```
+
+This is an **OSM dataset equality PASS**, not proof of Valhalla tile-build success or any legal route. No need to re-download the map for the first benchmark; preserve these same two NAS files.
+
+### Next DSM GUI gate: configure Valhalla before starting import
+
+1. **DSM 控制台 → 共用資料夾 → docker**: verify the `docker` Shared Folder's actual volume. The Windows SMB name and File Station breadcrumb do **not** establish the NAS's absolute Linux path. Confirm whether the real path is `/volume1/docker/garmin-routing/valhalla` or another mount.
+2. **File Station → docker → garmin-routing → valhalla**: verify both **`data/taiwan.osm.pbf`** and (later) **`docker-compose.yml`**; do not alter the now-verified PBF.
+3. Download [the reviewed Valhalla Compose template](compose.valhalla.yml) as a text file and rename it `docker-compose.yml` in that **valhalla** Project folder; the **relative volume** `./data:/custom_files` expects the Compose Project context there. Do not save YAML inside `data`.
+4. **Container Manager → 專案 → 新增**: `garmin-valhalla-poc` as project name; the **project path** is the verified *absolute* NAS folder. Choose the **existing compose file / upload YAML** corresponding to `valhalla/docker-compose.yml`, as offered by the installed UI.
+5. Review before deployment: image `ghcr.io/valhalla/valhalla-scripted:latest`, container internal port `8002` published on **NAS localhost only**, `./data:/custom_files`, `cpus: 2.0`, `mem_limit: 12g`, and **`restart: "no"`**. Avoid DSM Web Portal or any router/firewall port forward.
+6. **Do not click Build/Start yet** if Resource Monitor still reports only ~19GB available and the normal NAS workloads cannot be safely scheduled. Prefer a lower-load time with ~24GB available (operational caution, not engine minimum) and confirm no heavy backup/index job. When approved to execute, start *only* Valhalla; monitor DSM remaining available memory, swap/OOM, filesystem growth and Project logs during graph import.
+7. The first run uses `:latest` for exploratory validation; pin an immutable digest after confirming a working image. A container running successfully is **not** evidence of lawful vehicle routing; the route API remains isolated via `127.0.0.1`.
+
+**Before first actual import, ask the Product Owner to confirm the DSM Project path and fresh RAM available value**. Leave GraphHopper Project stopped until Valhalla import and the smoke check are complete.
