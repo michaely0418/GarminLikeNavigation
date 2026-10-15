@@ -222,3 +222,54 @@ The templates remain **PoC-only** and limited to local NAS loopback; avoid expos
 5. GUI Project path is a **filesystem location** under the selected share; the app's `安裝位置：儲存空間 1` does **not** imply every container project is automatically at `/volume1/docker`.
 
 After Resource Monitor/Shared Folder path confirmation, proceed with sections 3 and 4 to upload the PBF and create **Valhalla first**. The GraphHopper comparison remains deferred until Valhalla startup, graphs and smoke response are observed.
+
+## 2026-10-15 — Physical NAS memory and folder gate (owner GUI evidence)
+
+The owner provided DSM **Resource Monitor** and **File Station** screenshots:
+
+- Total 64 GB; usage **54%**; **34.1 GB in use**, **19 GB available**, **9 GB cache**, **1.4 GB reserved**, **453 MB buffered**. These are separately labeled UI categories; **do not double-count cache as guaranteed free memory**.
+- File Station shows the path **`docker > garmin-routing`**, with child folders **`graphhopper`** and **`valhalla`**. The screenshots **do not** establish the Unix absolute path, the volume number, that `data` exists within each, or that the user has actually staged an OSM PBF.
+- At current **19 GB available**, the original **12 GB per-container memory cap** would leave around 7 GB reported available if the engine reached the cap and other workloads remained unchanged. A conservative operational *planning target* is to run the first full-Taiwan build during a low-load window with around **24GB or more available** RAM before starting, while keeping a close eye on NAS memory/SWAP/OOM. This is not a software minimum requirement or guaranteed headroom; if the NAS's operating memory trends down, STOP and adjust scope/resources.
+- Never start GraphHopper and Valhalla at the same time for the first import; neither container is deployed yet.
+
+### Immediate step 1: Ensure only new PoC folders exist
+
+Use File Station to create folders beneath the **existing** `docker/garmin-routing`:
+
+```text
+docker/garmin-routing/
+  valhalla/
+    data/               <- must exist and have sufficient write permission
+  graphhopper/
+    data/               <- must exist and have sufficient write permission
+```
+
+No existing container or directory should be renamed, removed or have its permissions recursively changed. Control Panel → Shared Folder or NAS shell can verify the actual root (do not assume `/volume1/docker` until checked).
+
+### Immediate step 2: Stage identical Geofabrik PBF without launching an engine
+
+On Windows PowerShell after confirming the NAS SMB share `\\NAS_IP\docker` exists and is accessible:
+
+```powershell
+$Pbf = Join-Path $env:USERPROFILE 'Downloads\taiwan.osm.pbf'
+$Source = 'https://download.geofabrik.de/asia/taiwan-latest.osm.pbf'
+Invoke-WebRequest -Uri $Source -OutFile $Pbf
+$Expected = (Get-FileHash -Algorithm SHA256 $Pbf).Hash
+$NasRoot = '\\NAS_IP\docker\garmin-routing'
+Copy-Item -LiteralPath $Pbf -Destination (Join-Path $NasRoot 'valhalla\data\taiwan.osm.pbf')
+Copy-Item -LiteralPath $Pbf -Destination (Join-Path $NasRoot 'graphhopper\data\taiwan.osm.pbf')
+$Val = (Get-FileHash -Algorithm SHA256 (Join-Path $NasRoot 'valhalla\data\taiwan.osm.pbf')).Hash
+$Gh = (Get-FileHash -Algorithm SHA256 (Join-Path $NasRoot 'graphhopper\data\taiwan.osm.pbf')).Hash
+[pscustomobject]@{
+  LocalHash = $Expected
+  ValhallaHash = $Val
+  GraphHopperHash = $Gh
+  SameDataset = ($Expected -eq $Val -and $Val -eq $Gh)
+}
+```
+
+Replace `NAS_IP` with the real NAS host/LAN IP on **the local PC only**; do not commit it into the public project. Record date/time, PBF SHA-256 and Geofabrik source; the source's `latest` can change. Do not accidentally save under `docker/garmin-routing` without each engine's `data` subfolder. **Do not start Container Manager Projects until SameDataset=True**, real host volume path is checked, and memory pressure is acceptable.
+
+### Immediate step 3: Report preflight evidence
+
+Return just: verified Container Manager Project path / Shared Folder target, PBF file size and SHA-256 result, whether both `data` folders are present, and the latest Resource Monitor's **available** RAM immediately prior to import. Then create **Valhalla first** with the local-host-only Compose file; GraphHopper remains stopped. The Demo routes, speed limits, Taiwan motorcycle road access and Google Places are **not** verified by this PoC.
