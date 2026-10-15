@@ -130,3 +130,21 @@ The Product Owner supplied two new DSM screenshots. **Only the following non-ide
 5. Continue to keep GitHub PR #13 Draft and Stage 2 backend unconnected from the mobile App. No live OSM graph import or route legality verification has occurred.
 
 **Privacy:** File Station screenshot does not verify an absolute host path. Avoid copying device identifiers, account names or LAN addresses into public source or PR comments.
+
+### 2026-10-15 Geofabrik Taiwan OSM PBF staging — three-way checksum PASS (owner PowerShell evidence)
+
+The Product Owner provided a Windows PowerShell output showing successful file comparison using `Get-FileHash -Algorithm SHA256`:
+
+| Local / NAS target | Size (bytes) | Hash comparison |
+|---|---:|---|
+| Local downloaded `taiwan.osm.pbf` | **327581009** (~312.41 MiB) | reference SHA-256 |
+| Valhalla `data/taiwan.osm.pbf` on NAS | **327581009** | `Local = Valhalla: True` |
+| GraphHopper `data/taiwan.osm.pbf` on NAS | **327581009** | `Local = GraphHopper: True` |
+
+**`SameDataset: True` → PBF three-way byte equality PASS.**
+
+- PBF SHA-256: `259876A0E2C56B4102636A035CB073616FFAFEA6342A494B53F027C023E8FB82` (previous visible local Get-FileHash output).
+- This confirms the same **fixed PBF snapshot** is now staged for both engines; no need to download again. Keep the PBF unchanged during initial benchmarking. The hash is a data-integrity identifier, not proof of official map correctness or Taiwan road legality.
+- The NAS project root is accessed from Windows as a `docker/garmin-routing` SMB share, but **the underlying NAS Unix/volume path remains unverified**; before entering a path in Container Manager, confirm DSM Control Panel → Shared Folder storage location or equivalent NAS CLI path.
+- Source site: [Geofabrik Taiwan Extract](https://download.geofabrik.de/asia/taiwan.html). Exact source snapshot date/time cannot be established solely from hash/size screenshot; if known locally record it in the private experiment notes, do not invent a timestamp.
+- **Readiness:** PBF staging completed; Synology `garmin-valhalla-poc` has not been created or started. Initial memory available previously reported **19GB**, below suggested cautious target **24GB** for a container with a 12GB memory ceiling. Before actual full-country graph build, confirm NAS memory and choose an appropriately low-load window. No Android Stage 1 changes.
