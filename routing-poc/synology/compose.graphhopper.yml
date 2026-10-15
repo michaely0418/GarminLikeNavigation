@@ -23,7 +23,9 @@ services:
       - /data/graphhopper-web-11.1.jar
       - server
       - /config/graphhopper-config.yml
-    cpus: 2.0
+    # Synology DSM kernel on this NAS rejects Docker NanoCPUs/CFS quotas.
+    # Avoid cpus/cpu_quota/deploy.resources.limits.cpus; no hard CPU cap is set.
+    # Run only one routing engine at a time and monitor host CPU usage.
     # Owner DSM screenshot: 64 GB installed (above the official 32 GB listed maximum).
     # Allow 8 GB heap within an exploratory 12 GB container limit; monitor actual RSS.
     # Never run this benchmark concurrently with Valhalla during first-pass comparison.
