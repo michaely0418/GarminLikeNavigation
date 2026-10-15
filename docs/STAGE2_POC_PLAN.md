@@ -156,3 +156,24 @@ The Product Owner provided a Windows PowerShell output showing successful file c
 - Both Synology engine templates now **omit `cpus`**, retaining the 12GB memory limit. Valhalla `server_threads=2` is an application worker count, **not** a host CPU hard cap. During graph build observe actual NAS CPU resource pressure; if necessary pause other workloads or use an identical smaller PBF region for both engines. Do not replace `cpus` with another CFS quota field.
 - The repository preflight validator and 3 new offline tests reject the unsupported CPU quota forms. Existing project must be updated via **Project → Details → YAML Configurations** and redeployed; never delete the user's verified PBF folder. Before triggering the expensive first import check up-to-date DSM available RAM and use a low-load maintenance window.
 - **Real NAS recovery / actual importer success remain PENDING**, notwithstanding CI green.
+
+### 2026-10-15 Valhalla — first NAS-local route smoke PASS
+
+Product Owner provided a screenshot of a real `curl -sS ... POST http://127.0.0.1:8002/route` executed **in the Synology NAS Linux shell**, then parsed the resulting JSON with `python3`. This confirms one actual `auto` route, **not legal vehicle navigation**:
+
+| Evidence field | Observed result |
+|---|---|
+| NAS-local `/route` HTTP result | **HTTP 200** |
+| Static public endpoints | Taipei Main Station vicinity (25.0478,121.5170) → Taipei 101 vicinity (25.0338,121.5645) |
+| `trip.summary.length` | **6.239 km** |
+| `trip.summary.time` | **939.77 seconds** (~15m 40s) |
+| `trip.legs` count | **1** |
+| `trip.legs[0].shape` present | **True** |
+| Route legality verified | **FALSE / NOT PERFORMED** |
+| Through-Windows SSH tunnel HTTP | **NOT AVAILABLE**: server refused `direct-tcpip` (`administratively prohibited`) |
+
+**Milestone status:** Official Valhalla Docker container started on DSM; OSM graph generated and tiles loaded (261 tiles reported by the same build); NAS-local `/status` returned HTTP 200; actual `/route` returned route length/time/encoded geometry. Mark **VALHALLA_LOCAL_ROUTE_SMOKE = PASS**.
+
+**Still NOT RUN:** repeated request latency p50/p95, cold/warm response comparison, graph-cache size, peak CPU/RAM/SSD I/O, GraphHopper on identical SHA-256 OSM, alternate routes and direction, legal-road hard rejects for scooter/heavy motorcycle. Do not promote the result to a navigation-ready environment or connect Stage 1 Android HUD. The route ETA is a model estimate without measured traffic.
+
+**Next gate:** measure NAS-local Valhalla warm-up and at least 20 repeat latencies with the same non-personal public endpoints; record p50/p95, SHA-256 `259876A0E2C56B4102636A035CB073616FFAFEA6342A494B53F027C023E8FB82`, and engine build version `3.9.1-d558ba3db`; review DSM live CPU/RAM and graph directory usage. Only afterward evaluate the GraphHopper 11.1 comparator sequentially. Avoid changing SSH policy or exposing host ports merely to benchmark.
