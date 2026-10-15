@@ -16,7 +16,7 @@ References:
 
 **User-confirmed:** DS1621xs+, Xeon D-1527 (4 cores / 2.2 GHz), physical RAM **64 GB**, DSM **7.4.1-90080 Update 1**. DSM Storage Manager reports **Storage Space 1: Btrfs, 34.9 TB total / 29.3 TB used / 5.6 TB available**. A 465 GB **read-write SSD cache** is present. An **APC UPS** is detected; actual battery runtime and UPS shutdown configuration are unverified.
 
-- **Still needed:** Package Center → **Container Manager** installed version, NAS available RAM under normal workload (Resource Monitor), actual project volume/share path and writable permissions.
+- **Container Manager confirmed installed and running:** Package Center screenshot reports **24.0.2-1706**, with latest online **24.0.2-1706**, installed on **Storage Space 1**. The package version is not a verified Docker Engine or Docker Compose binary version. **Still needed:** NAS available RAM under normal workload (Resource Monitor), actual project volume/share path and writable permissions.
 - **Initial disk planning:** reserve around **50 GB** for the raw input, two graph indexes and logs (planning estimate, not a measured requirement). The DSM screenshot's **5.6 TB free** is ample for this reserve. Do not infer that `儲存空間 1` means files are mounted at `/volume1`; verify the intended volume/project Shared Folder path before running.
 - **SSD cache is not a storage volume:** do not configure a graph/PBF bind mount using the cache capacity; use normal NAS Btrfs Shared Folder storage. Cache write amplification, graph build I/O and snapshots must be monitored.
 - **UPS presence is not runtime assurance:** confirm APC UPS shutdown behavior and battery runtime if running a long initial graph import.
@@ -24,7 +24,7 @@ References:
 
 ### GUI preflight checklist
 
-1. **Package Center → Installed → Container Manager**: record version and status. If it is not installed, install it from a Synology-supported source only; do not guess compatibility.
+1. **Package Center → Installed → Container Manager**: **PASS as reported by 2026-10-15 screenshot** (package 24.0.2-1706, 已啟動, installed on Storage Space 1). Do not equate this package number with Docker Engine/Compose CLI versions; verify runtime compatibility during Project configuration.
 2. **Resource Monitor → Memory / CPU**: capture actual available RAM and NAS load while normal containers and services are running; 64 GB physical RAM does not equal 64 GB free.
 3. **Storage Manager → Storage / Volumes** and **Control Panel → Shared Folder**: locate the intended shared folder `docker` and its actual volume. If it does not exist, create a separate NAS Shared Folder for `garmin-routing`, rather than modifying existing application directories.
 4. **Container Manager → Project**: confirm it can create Compose projects, and do not click Build/Start until the local OSM data and correct volume path are ready.
@@ -195,9 +195,30 @@ Results contain p50/p95 **observed end-to-end request latency**, distance (km), 
 | DSM 7.4.1-90080 Update 1 | **CONFIRMED by owner DSM screenshot** |
 | Storage Space 1 Btrfs / 34.9 TB total / 5.6 TB free | **CONFIRMED by owner screenshot** |
 | SSD read-write cache and APC UPS detected | **CONFIRMED presence**, cache capacity is NOT graph storage; UPS runtime remains unknown |
-| Container Manager installed version | **NOT YET PROVIDED** |
+| Container Manager installed version | **CONFIRMED: 24.0.2-1706**, running (Package Center screenshot); Docker Engine/Compose CLI exact versions remain unverified |
 | Available NAS memory under real workload | **NOT YET PROVIDED** |
 | Actual target project Shared Folder / mount directory | **NOT YET VERIFIED** |
 | Native on-NAS Docker run / OSM import / API benchmark | **NOT RUN** |
 
 The templates remain **PoC-only** and limited to local NAS loopback; avoid exposing the endpoint through LAN forwarding, reverse proxies, DDNS or Cloudflare Tunnel until service authentication and TLS are designed. Taiwan legal vehicle rules and Google Places license gating remain unchanged.
+
+## 2026-10-15 Container Manager preflight — current step-by-step action
+
+**Screenshot accepted:** Container Manager `24.0.2-1706` is **running** and the package is installed on **Storage Space 1**, with the same version shown as the online latest. This does not prove a Docker Project has been created.
+
+### Next low-risk DSM GUI steps (no containers started)
+
+1. Open **Resource Monitor → Memory** with existing normal workloads still running. Record **Available / Used** RAM and CPU load before allocating the 12GB cap. Avoid including personal host details in published screenshots.
+2. Open **Control Panel → Shared Folder** (or File Station) and identify the share already hosting your other Container Manager Projects. Check which Volume it resides on and permissions. **Do not change ownership/permissions of existing app directories**.
+3. If the intended Shared Folder is `docker` and is on `volume1`, create ONLY these NEW subfolders via File Station:
+
+   ```text
+   docker/garmin-routing/valhalla/data/
+   docker/garmin-routing/graphhopper/data/
+   ```
+
+   If the NAS uses a different shared folder/volume, use its real path instead; `/volume1/docker` in this guide is an **example**, not a verified current location. Don't create a new DSM shared folder simply because its name is in this example without checking what already exists.
+4. **Do not start or expose services yet.** At the next gate, download a single Taiwan Geofabrik snapshot, verify SHA-256 and copy the identical PBF to each `data` directory. Configure the Valhalla Project in Synology Container Manager only when real path and NAS available memory are established.
+5. GUI Project path is a **filesystem location** under the selected share; the app's `安裝位置：儲存空間 1` does **not** imply every container project is automatically at `/volume1/docker`.
+
+After Resource Monitor/Shared Folder path confirmation, proceed with sections 3 and 4 to upload the PBF and create **Valhalla first**. The GraphHopper comparison remains deferred until Valhalla startup, graphs and smoke response are observed.
